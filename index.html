@@ -1,0 +1,2270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>WASSAN Presence – Foot on the Ground Map</title>
+    <meta name="description" content="Interactive map of WASSAN Presence and Foot on the Ground districts across India." />
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Pre-load GeoJSON Data via Script Tags to bypass browser file:// CORS restrictions -->
+    <script src="geojson_data.js"></script>
+
+    <style>
+        /* ========== RESET & BASE ========== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html, body {
+            height: 100%; width: 100%;
+            overflow: hidden;
+            background-color: #030712;
+            color: #f3f4f6;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* ========== MAP ========== */
+        #map {
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            background-color: #0b0f19;
+        }
+
+        /* ========== SIDEBAR ========== */
+        #sidebar {
+            position: fixed;
+            top: 0; left: 0;
+            height: 100%;
+            width: 380px;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            background: rgba(11, 15, 25, 0.90);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 20px 0 40px rgba(0,0,0,0.6);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #sidebar.collapsed {
+            transform: translateX(-380px);
+        }
+        @media (max-width: 768px) {
+            #sidebar { width: 100vw; transform: translateX(-100%); }
+            #sidebar.open { transform: translateX(0); }
+        }
+
+        /* ========== DESKTOP SIDEBAR COLLAPSE BUTTON ========== */
+        .toggle-sidebar-btn {
+            position: absolute;
+            top: 50%;
+            right: -24px;
+            transform: translateY(-50%);
+            width: 24px;
+            height: 56px;
+            background: rgba(11, 15, 25, 0.9);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-left: none;
+            border-radius: 0 10px 10px 0;
+            color: #d1d5db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 6px 0 15px rgba(0,0,0,0.4);
+            transition: all 0.25s ease;
+            outline: none;
+            padding: 0;
+        }
+        .toggle-sidebar-btn:hover {
+            background: #7c3aed;
+            color: #fff;
+            box-shadow: 0 0 12px rgba(124, 58, 237, 0.4);
+        }
+        .toggle-sidebar-btn svg {
+            width: 14px;
+            height: 14px;
+            transition: transform 0.3s ease;
+        }
+        #sidebar.collapsed .toggle-sidebar-btn svg {
+            transform: rotate(180deg);
+        }
+        @media (max-width: 768px) {
+            .toggle-sidebar-btn { display: none !important; }
+        }
+
+        /* ========== SCROLLBAR ========== */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+
+        /* ========== LEAFLET TOOLTIP ========== */
+        .cso-tooltip {
+            background: rgba(15,23,42,0.96) !important;
+            backdrop-filter: blur(10px) !important;
+            border: 1px solid rgba(255,255,255,0.16) !important;
+            color: #fff !important;
+            font-family: 'Inter', sans-serif !important;
+            border-radius: 10px !important;
+            padding: 8px 12px !important;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.6) !important;
+            font-size: 12px !important;
+            pointer-events: none !important;
+        }
+        .cso-tooltip::before { border-top-color: rgba(15,23,42,0.96) !important; }
+
+        /* ========== CSO DOT LABEL ========== */
+        .cso-marker-label {
+            background: rgba(15,23,42,0.92) !important;
+            backdrop-filter: blur(4px) !important;
+            border: 1px solid rgba(255,255,255,0.13) !important;
+            color: #f3f4f6 !important;
+            font-family: 'Inter', sans-serif !important;
+            font-size: 9px !important;
+            font-weight: 700 !important;
+            border-radius: 4px !important;
+            padding: 2px 5px !important;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important;
+            white-space: nowrap;
+            pointer-events: none !important;
+        }
+        .cso-marker-label::before { display: none !important; }
+
+        /* ========== POPUP ========== */
+        .cso-map-popup .leaflet-popup-content-wrapper {
+            background: rgba(15,23,42,0.96) !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            border: 1px solid rgba(255,255,255,0.14) !important;
+            color: #f3f4f6 !important;
+            border-radius: 12px !important;
+            box-shadow: 0 16px 30px rgba(0,0,0,0.6) !important;
+        }
+        .cso-map-popup .leaflet-popup-tip { background: rgba(15,23,42,0.96) !important; }
+        .cso-map-popup .leaflet-popup-close-button { color: #9ca3af !important; padding: 8px 8px 0 0 !important; }
+        .cso-map-popup .leaflet-popup-close-button:hover { color: #fff !important; background: transparent !important; }
+
+        /* ========== GLASS CARDS ========== */
+        .glass-card {
+            background: rgba(11,15,25,0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+            border-radius: 14px;
+        }
+
+        /* ========== STATS BOX (bottom-left) ========== */
+        #statsBox {
+            position: absolute;
+            bottom: 24px;
+            left: 400px; /* sidebar width + gap */
+            z-index: 400;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            min-width: 195px;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #sidebar.collapsed ~ #statsBox {
+            left: 24px;
+        }
+        @media (max-width: 768px) { #statsBox { left: 16px; bottom: 80px; } }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .stat-item:last-child { border-bottom: none; }
+        .stat-icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .stat-text { display: flex; flex-direction: column; }
+        .stat-value { font-size: 15px; font-weight: 800; color: #fff; line-height: 1.1; }
+        .stat-label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #6b7280; margin-top: 1px; }
+
+        /* ========== DOWNLOAD BUTTON ========== */
+        #downloadMapBtn {
+            position: absolute;
+            top: 16px;
+            right: 170px;
+            z-index: 400;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #e5e7eb;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            border: none;
+            border-radius: 10px;
+            background: rgba(11,15,25,0.82);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+            transition: all 0.2s ease;
+        }
+        #downloadMapBtn:hover { background: rgba(109,40,217,0.5); border-color: rgba(139,92,246,0.5); color: #fff; }
+        #downloadMapBtn svg { width: 14px; height: 14px; }
+
+        /* ========== BASEMAP SWITCHER ========== */
+        .basemap-box {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 400;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 12px;
+            padding: 8px 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            min-width: 140px;
+        }
+        .basemap-label {
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #6b7280;
+        }
+        #basemapSelect {
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 6px 28px 6px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #1f2937;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg fill='none' stroke='%234B5563' stroke-width='2' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'></path></svg>");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 12px;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s;
+        }
+        #basemapSelect:focus {
+            border-color: #7c3aed;
+        }
+
+        /* ========== LEGEND (bottom-right) ========== */
+        #mapLegend {
+            position: absolute;
+            bottom: 24px;
+            right: 16px;
+            z-index: 400;
+            padding: 14px;
+            min-width: 175px;
+        }
+
+        /* ========== SIDEBAR HEADER ========== */
+        .sidebar-header {
+            padding: 18px 20px 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            background: rgba(11,15,25,0.4);
+            flex-shrink: 0;
+        }
+        .brand-logo {
+            width: 38px; height: 38px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #7c3aed, #a78bfa);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 16px rgba(124,58,237,0.4);
+            flex-shrink: 0;
+        }
+        .brand-logo svg { width: 20px; height: 20px; color: #fff; }
+        .brand-title { font-size: 16px; font-weight: 800; color: #fff; letter-spacing: -0.01em; text-transform: uppercase; }
+        .brand-subtitle { font-size: 10px; font-weight: 700; color: #a78bfa; text-transform: uppercase; letter-spacing: 0.12em; margin-top: 2px; }
+
+        /* ========== SIDEBAR CONTENT ========== */
+        .sidebar-scroll { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+
+        /* ========== FORM INPUTS ========== */
+        .form-input {
+            width: 100%;
+            background: #111827;
+            border: 1px solid rgba(255,255,255,0.09);
+            border-radius: 10px;
+            padding: 9px 14px;
+            font-size: 13px;
+            color: #f3f4f6;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+        .form-input::placeholder { color: #6b7280; }
+        .form-input:focus { border-color: rgba(139,92,246,0.6); box-shadow: 0 0 0 3px rgba(139,92,246,0.12); }
+        .form-input option {
+            background: #111827;
+            color: #f3f4f6;
+            font-family: 'Inter', sans-serif;
+        }
+        .form-input option:checked, .form-input option:hover {
+            background: #1e1b4b;
+            color: #a78bfa;
+        }
+        .input-icon-wrap { position: relative; }
+        .input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #6b7280; pointer-events: none; }
+        .input-icon + .form-input { padding-left: 36px; }
+        .select-arrow { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #6b7280; pointer-events: none; }
+
+        /* ========== TABS ========== */
+        .tabs-bar { display: flex; border-bottom: 1px solid rgba(255,255,255,0.1); gap: 0; }
+        .tab-btn {
+            flex: 1; padding: 10px 0;
+            font-size: 10px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.08em;
+            color: #6b7280;
+            background: transparent; border: none; cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab-btn.active { color: #fff; border-bottom-color: #8b5cf6; }
+        .tab-btn:hover:not(.active) { color: #d1d5db; }
+
+        /* ========== SELECTION CARD ========== */
+        #selectionCard {
+            display: none;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(139,92,246,0.25);
+            background: rgba(139,92,246,0.08);
+            position: relative;
+            overflow: hidden;
+        }
+        #selectionCard.visible { display: block; }
+        #selectionCard::before {
+            content: '';
+            position: absolute;
+            top: -20px; right: -20px;
+            width: 80px; height: 80px;
+            background: rgba(139,92,246,0.15);
+            border-radius: 50%;
+            filter: blur(20px);
+            pointer-events: none;
+        }
+
+        /* ========== ORG LIST ========== */
+        .org-item {
+            padding: 10px 12px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.18s;
+        }
+        .org-item:hover { background: rgba(139,92,246,0.12); border-color: rgba(139,92,246,0.25); }
+
+        /* ========== CHART BOX ========== */
+        .chart-box {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        /* ========== LOADER ========== */
+        #loader {
+            position: fixed; inset: 0;
+            background: #030712;
+            z-index: 9999;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            transition: opacity 0.6s ease;
+        }
+        #loader.hidden { opacity: 0; pointer-events: none; }
+        .spin-ring {
+            width: 60px; height: 60px;
+            border: 3px solid rgba(139,92,246,0.15);
+            border-top-color: #8b5cf6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .ping-ring {
+            position: absolute;
+            width: 72px; height: 72px;
+            border: 1px solid rgba(139,92,246,0.2);
+            border-radius: 50%;
+            animation: ping 1.4s ease-out infinite;
+        }
+        @keyframes ping { 0%{transform:scale(0.9);opacity:1} 100%{transform:scale(1.4);opacity:0} }
+        #progressBar {
+            width: 180px; height: 3px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 99px; overflow: hidden;
+            margin-top: 20px;
+        }
+        #progressFill {
+            height: 100%;
+            background: linear-gradient(90deg, #7c3aed, #a78bfa);
+            border-radius: 99px;
+            width: 10%;
+            transition: width 0.3s ease;
+        }
+
+        /* ========== SIDEBAR FOOTER ========== */
+        .sidebar-footer {
+            padding: 10px 16px;
+            border-top: 1px solid rgba(255,255,255,0.07);
+            background: rgba(11,15,25,0.4);
+            flex-shrink: 0;
+            text-align: center;
+        }
+
+        /* ========== MOBILE MENU ========== */
+        #mobileMenuBtn {
+            display: none;
+            position: absolute; top: 16px; left: 16px;
+            z-index: 500;
+            background: rgba(11,15,25,0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 10px;
+            color: #fff;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+        }
+        @media (max-width: 768px) {
+            #mobileMenuBtn { display: flex; align-items: center; justify-content: center; }
+            #statsBox { left: 16px; }
+            #downloadMapBtn { right: auto; left: 72px; }
+            #basemapSwitcher { right: 16px; }
+        }
+
+        .label-text { font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+        .pill { display: inline-block; padding: 2px 7px; border-radius: 5px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<!-- ========== LOADER ========== -->
+<div id="loader">
+    <div style="position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
+        <div class="ping-ring"></div>
+        <div class="spin-ring"></div>
+        <div style="position:absolute;width:12px;height:12px;background:#8b5cf6;border-radius:50%;box-shadow:0 0 14px #8b5cf6;"></div>
+    </div>
+    <div style="font-size:16px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:0.12em;">WASSAN Presence</div>
+    <div style="font-size:10px;font-weight:600;color:#8b5cf6;text-transform:uppercase;letter-spacing:0.14em;margin-top:6px;">Foot on the Ground Map</div>
+    <div id="progressBar"><div id="progressFill"></div></div>
+</div>
+
+<!-- ========== SIDEBAR ========== -->
+<div id="sidebar">
+    <button id="toggleSidebarBtn" class="toggle-sidebar-btn" aria-label="Toggle Sidebar">
+        <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+        </svg>
+    </button>
+
+    <!-- Header -->
+    <div class="sidebar-header">
+        <div style="display:flex;align-items:center;gap:12px;">
+            <div class="brand-logo">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+            </div>
+            <div>
+                <div class="brand-title">WASSAN Presence</div>
+                <div class="brand-subtitle">Foot on the Ground</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scrollable Content -->
+    <div class="sidebar-scroll">
+
+        <!-- Filters -->
+        <div>
+            <div class="label-text">Quick Filters</div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+
+                <!-- Search -->
+                <div class="input-icon-wrap">
+                    <svg class="input-icon" style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input type="text" id="searchInput" class="form-input" placeholder="Search district, state…" />
+                </div>
+
+                <!-- State Dropdown -->
+                <div class="input-icon-wrap" style="position:relative;">
+                    <select id="stateSelect" class="form-input" style="padding-right:34px;">
+                        <option value="">All States – National View</option>
+                    </select>
+                    <svg class="select-arrow" style="width:13px;height:13px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Selection Card -->
+        <div id="selectionCard">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+                <div>
+                    <span class="pill" style="background:rgba(139,92,246,0.22);color:#c4b5fd;">Selected District</span>
+                    <div id="selectedDistrictName" style="font-size:17px;font-weight:800;color:#fff;margin-top:4px;line-height:1.1;">–</div>
+                    <div id="selectedDistrictState" style="font-size:11px;color:#9ca3af;margin-top:2px;">–</div>
+                </div>
+                <button id="clearSelectionBtn" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:7px;padding:5px;color:#9ca3af;cursor:pointer;transition:all 0.2s;" title="Clear selection"
+                    onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#9ca3af'">
+                    <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:10px;">
+                <div class="label-text" style="margin-bottom:8px;">Foot on the Ground Presence (<span id="selectedDistrictCsoCount">0</span>)</div>
+                <ul id="selectedDistrictOrgs" style="display:flex;flex-direction:column;gap:5px;max-height:140px;overflow-y:auto;padding-right:4px;"></ul>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div>
+            <div class="tabs-bar">
+                <button id="tabOrgsBtn" class="tab-btn active">Districts List</button>
+                <button id="tabAnalyticsBtn" class="tab-btn">Analytics</button>
+            </div>
+
+            <!-- Tab: Organizations -->
+            <div id="tabOrgs" style="margin-top:10px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <span class="label-text" style="margin:0;">Active Districts</span>
+                    <span id="filteredOrgsCount" style="font-size:11px;font-weight:700;color:#8b5cf6;">Loading…</span>
+                </div>
+                <div id="csoList" style="display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto;padding-right:4px;">
+                    <div style="text-align:center;color:#6b7280;padding:24px 0;font-size:13px;">Initializing…</div>
+                </div>
+            </div>
+
+            <!-- Tab: Analytics -->
+            <div id="tabAnalytics" class="hidden" style="margin-top:10px;">
+                <div class="chart-box">
+                    <div class="label-text" style="text-align:center;margin-bottom:10px;">Foot on the Ground Districts by State</div>
+                    <div style="position:relative;height:240px;">
+                        <canvas id="stateChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- end sidebar-scroll -->
+
+    <!-- Footer -->
+    <div class="sidebar-footer">
+        <span style="font-size:9px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">Developed by WASSAN Tech Team · Foot on the Ground</span>
+    </div>
+</div>
+
+<!-- ========== MOBILE MENU BUTTON ========== -->
+<button id="mobileMenuBtn">
+    <svg style="width:22px;height:22px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+    </svg>
+</button>
+
+<!-- ========== MAP ========== -->
+<div id="map"></div>
+
+<!-- ========== BASEMAP SWITCHER ========== -->
+<div id="basemapSwitcher" class="basemap-box">
+    <span class="basemap-label">Map Style</span>
+    <select id="basemapSelect" onchange="setBasemap(this.value)">
+        <option value="satellite" selected>Satellite</option>
+        <option value="dark">Dark</option>
+        <option value="light">Light / White</option>
+        <option value="osm">Roads</option>
+    </select>
+</div>
+
+<!-- ========== DOWNLOAD BUTTON ========== -->
+<button id="downloadMapBtn" onclick="downloadMapImage()">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+    </svg>
+    Save Map
+</button>
+
+<!-- ========== STATS BOX (bottom-left) ========== -->
+<div id="statsBox" class="glass-card">
+    <div class="stat-item">
+        <div class="stat-icon" style="background:rgba(124,58,237,0.18);">
+            <svg style="width:14px;height:14px;color:#a78bfa;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
+            </svg>
+        </div>
+        <div class="stat-text">
+            <div class="stat-value" id="statStates">–</div>
+            <div class="stat-label">States</div>
+        </div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-icon" style="background:rgba(16,185,129,0.15);">
+            <svg style="width:14px;height:14px;color:#34d399;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+            </svg>
+        </div>
+        <div class="stat-text">
+            <div class="stat-value" id="statDistricts">–</div>
+            <div class="stat-label">Districts</div>
+        </div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-icon" style="background:rgba(245,158,11,0.15);">
+            <svg style="width:14px;height:14px;color:#fbbf24;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+            </svg>
+        </div>
+        <!-- <div class="stat-text">
+            <div class="stat-value" id="statProjects">–</div>
+            <div class="stat-label">Engagements</div> -->
+        </div> -->
+    </div>
+</div>
+
+<!-- ========== LEGEND (bottom-right) ========== -->
+<div id="mapLegend" class="glass-card">
+    <div style="font-size:9px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid rgba(255,255,255,0.07);">WASSAN Coverage</div>
+    <div style="display:flex;flex-direction:column;gap:7px;">
+        <div style="display:flex;align-items:center;gap:8px;"><div style="width:12px;height:12px;border-radius:3px;background:#7c3aed;flex-shrink:0;box-shadow:0 0 8px rgba(124,58,237,0.5);"></div><span style="font-size:10px;color:#d1d5db;font-weight:600;">Foot on the Ground District</span></div>
+        <div style="display:flex;align-items:center;gap:8px;"><div style="width:12px;height:12px;border-radius:3px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.02);flex-shrink:0;"></div><span style="font-size:10px;color:#9ca3af;font-weight:500;">Other District Outline</span></div>
+        <div style="margin-top:4px;padding-top:7px;border-top:1px solid rgba(255,255,255,0.07);">
+            <div style="font-size:9px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">State Hover</div>
+            <div style="font-size:10px;color:#a78bfa;line-height:1.3;">Hover any state boundary to view district presence count</div>
+        </div>
+    </div>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Inline Fallback Data from Excel JIVA_map_excel.xlsx
+const EMBEDDED_CSO_DATA = [
+  {
+    "State": "Andhra Pradesh",
+    "District": "Satya Sai",
+    "Matched_State": "ANDHRA PRADESH",
+    "Matched_Shapefile_District": "Prakasam",
+    "Shapefile_District": "Prakasam",
+    "Organization": "Satya Sai"
+  },
+  {
+    "State": "Andhra Pradesh",
+    "District": "Anamayya",
+    "Matched_State": "ANDHRA PRADESH",
+    "Matched_Shapefile_District": "Vizianagaram",
+    "Shapefile_District": "Vizianagaram",
+    "Organization": "Anamayya"
+  },
+  {
+    "State": "Andhra Pradesh",
+    "District": "Manyam",
+    "Matched_State": "ANDHRA PRADESH",
+    "Matched_Shapefile_District": "Vizianagaram",
+    "Shapefile_District": "Vizianagaram",
+    "Organization": "Manyam"
+  },
+  {
+    "State": "Andhra Pradesh",
+    "District": "Paderu",
+    "Matched_State": "ANDHRA PRADESH",
+    "Matched_Shapefile_District": "East Godavari",
+    "Shapefile_District": "East Godavari",
+    "Organization": "Paderu"
+  },
+  {
+    "State": "Andhra Pradesh",
+    "District": "Srikakulam",
+    "Matched_State": "ANDHRA PRADESH",
+    "Matched_Shapefile_District": "Srikakulam",
+    "Shapefile_District": "Srikakulam",
+    "Organization": "Srikakulam"
+  },
+  {
+    "State": "Andhra Pradesh",
+    "District": "Prakasam",
+    "Matched_State": "ANDHRA PRADESH",
+    "Matched_Shapefile_District": "Prakasam",
+    "Shapefile_District": "Prakasam",
+    "Organization": "Prakasam"
+  },
+  {
+    "State": "Andhra Pradesh",
+    "District": "Satya Sai",
+    "Matched_State": "ANDHRA PRADESH",
+    "Matched_Shapefile_District": "Prakasam",
+    "Shapefile_District": "Prakasam",
+    "Organization": "Satya Sai"
+  },
+  {
+    "State": "Arunachal Pradesh",
+    "District": "Namsai",
+    "Matched_State": "ARUNACHAL PRADESH",
+    "Matched_Shapefile_District": "Namsai",
+    "Shapefile_District": "Namsai",
+    "Organization": "Namsai"
+  },
+  {
+    "State": "Assam",
+    "District": "Baksa",
+    "Matched_State": "ASSAM",
+    "Matched_Shapefile_District": "Baksa",
+    "Shapefile_District": "Baksa",
+    "Organization": "Baksa"
+  },
+  {
+    "State": "Assam",
+    "District": "West Karbi Anglong",
+    "Matched_State": "ASSAM",
+    "Matched_Shapefile_District": "West Karbi Anglong",
+    "Shapefile_District": "West Karbi Anglong",
+    "Organization": "West Karbi Anglong"
+  },
+  {
+    "State": "Bihar",
+    "District": "Jamui",
+    "Matched_State": "BIHAR",
+    "Matched_Shapefile_District": "Jamui",
+    "Shapefile_District": "Jamui",
+    "Organization": "Jamui"
+  },
+  {
+    "State": "Bihar",
+    "District": "Samastipur",
+    "Matched_State": "BIHAR",
+    "Matched_Shapefile_District": "Samastipur",
+    "Shapefile_District": "Samastipur",
+    "Organization": "Samastipur"
+  },
+  {
+    "State": "Chhattisgarh",
+    "District": "Baluda Bazar",
+    "Matched_State": "CHHATTISGARH",
+    "Matched_Shapefile_District": "Baloda Bazar",
+    "Shapefile_District": "Baloda Bazar",
+    "Organization": "Baluda Bazar"
+  },
+  {
+    "State": "Chhattisgarh",
+    "District": "Dantewada",
+    "Matched_State": "CHHATTISGARH",
+    "Matched_Shapefile_District": "Dakshin Bastar Dantewada",
+    "Shapefile_District": "Dakshin Bastar Dantewada",
+    "Organization": "Dantewada"
+  },
+  {
+    "State": "Chhattisgarh",
+    "District": "Korba",
+    "Matched_State": "CHHATTISGARH",
+    "Matched_Shapefile_District": "Korba",
+    "Shapefile_District": "Korba",
+    "Organization": "Korba"
+  },
+  {
+    "State": "Chhattisgarh",
+    "District": "Balrampur",
+    "Matched_State": "CHHATTISGARH",
+    "Matched_Shapefile_District": "Balrampur",
+    "Shapefile_District": "Balrampur",
+    "Organization": "Balrampur"
+  },
+  {
+    "State": "Gujarat",
+    "District": "Navsari",
+    "Matched_State": "GUJARAT",
+    "Matched_Shapefile_District": "Navsari",
+    "Shapefile_District": "Navsari",
+    "Organization": "Navsari"
+  },
+  {
+    "State": "Gujarat",
+    "District": "Panchmahal",
+    "Matched_State": "GUJARAT",
+    "Matched_Shapefile_District": "Panch Mahals",
+    "Shapefile_District": "Panch Mahals",
+    "Organization": "Panchmahal"
+  },
+  {
+    "State": "Gujarat",
+    "District": "Mahisagar",
+    "Matched_State": "GUJARAT",
+    "Matched_Shapefile_District": "Mahisagar",
+    "Shapefile_District": "Mahisagar",
+    "Organization": "Mahisagar"
+  },
+  {
+    "State": "Gujarat",
+    "District": "Narmada",
+    "Matched_State": "GUJARAT",
+    "Matched_Shapefile_District": "Narmada",
+    "Shapefile_District": "Narmada",
+    "Organization": "Narmada"
+  },
+  {
+    "State": "Gujarat",
+    "District": "Aravalli",
+    "Matched_State": "GUJARAT",
+    "Matched_Shapefile_District": "Aravalli",
+    "Shapefile_District": "Aravalli",
+    "Organization": "Aravalli"
+  },
+  {
+    "State": "Himachal Pradesh",
+    "District": "Mandi",
+    "Matched_State": "HIMACHAL PRADESH",
+    "Matched_Shapefile_District": "Mandi",
+    "Shapefile_District": "Mandi",
+    "Organization": "Mandi"
+  },
+  {
+    "State": "Himachal Pradesh",
+    "District": "Chamba",
+    "Matched_State": "HIMACHAL PRADESH",
+    "Matched_Shapefile_District": "Chamba",
+    "Shapefile_District": "Chamba",
+    "Organization": "Chamba"
+  },
+  {
+    "State": "Jharkhand",
+    "District": "West Singhbum",
+    "Matched_State": "JHARKHAND",
+    "Matched_Shapefile_District": "Purbi Singhbhum",
+    "Shapefile_District": "Purbi Singhbhum",
+    "Organization": "West Singhbum"
+  },
+  {
+    "State": "Jharkhand",
+    "District": "Dumka",
+    "Matched_State": "JHARKHAND",
+    "Matched_Shapefile_District": "Dumka",
+    "Shapefile_District": "Dumka",
+    "Organization": "Dumka"
+  },
+  {
+    "State": "Jharkhand",
+    "District": "Ramgarh",
+    "Matched_State": "JHARKHAND",
+    "Matched_Shapefile_District": "Ramgarh",
+    "Shapefile_District": "Ramgarh",
+    "Organization": "Ramgarh"
+  },
+  {
+    "State": "Jharkhand",
+    "District": "Lohardaga",
+    "Matched_State": "JHARKHAND",
+    "Matched_Shapefile_District": "Lohardaga",
+    "Shapefile_District": "Lohardaga",
+    "Organization": "Lohardaga"
+  },
+  {
+    "State": "Jharkhand",
+    "District": "Pashchimi Singhbhum",
+    "Matched_State": "JHARKHAND",
+    "Matched_Shapefile_District": "Pashchimi Singhbhum",
+    "Shapefile_District": "Pashchimi Singhbhum",
+    "Organization": "Pashchimi Singhbhum"
+  },
+  {
+    "State": "Jharkhand",
+    "District": "Hazaribagh",
+    "Matched_State": "JHARKHAND",
+    "Matched_Shapefile_District": "Hazaribagh",
+    "Shapefile_District": "Hazaribagh",
+    "Organization": "Hazaribagh"
+  },
+  {
+    "State": "Jharkhand",
+    "District": "Palamau",
+    "Matched_State": "JHARKHAND",
+    "Matched_Shapefile_District": "Palamu",
+    "Shapefile_District": "Palamu",
+    "Organization": "Palamau"
+  },
+  {
+    "State": "Jharkhand",
+    "District": "Deoghar",
+    "Matched_State": "JHARKHAND",
+    "Matched_Shapefile_District": "Deoghar",
+    "Shapefile_District": "Deoghar",
+    "Organization": "Deoghar"
+  },
+  {
+    "State": "Jharkhand",
+    "District": "Deoghar",
+    "Matched_State": "JHARKHAND",
+    "Matched_Shapefile_District": "Deoghar",
+    "Shapefile_District": "Deoghar",
+    "Organization": "Deoghar"
+  },
+  {
+    "State": "Jharkhand",
+    "District": "Latehar",
+    "Matched_State": "JHARKHAND",
+    "Matched_Shapefile_District": "Latehar",
+    "Shapefile_District": "Latehar",
+    "Organization": "Latehar"
+  },
+  {
+    "State": "Karnataka",
+    "District": "Chitradurga",
+    "Matched_State": "KARNATAKA",
+    "Matched_Shapefile_District": "Chitradurga",
+    "Shapefile_District": "Chitradurga",
+    "Organization": "Chitradurga"
+  },
+  {
+    "State": "Karnataka",
+    "District": "Chikkamagaluru",
+    "Matched_State": "KARNATAKA",
+    "Matched_Shapefile_District": "Chikkamagaluru",
+    "Shapefile_District": "Chikkamagaluru",
+    "Organization": "Chikkamagaluru"
+  },
+  {
+    "State": "Karnataka",
+    "District": "Chikkaballapura",
+    "Matched_State": "KARNATAKA",
+    "Matched_Shapefile_District": "Chikkaballapura",
+    "Shapefile_District": "Chikkaballapura",
+    "Organization": "Chikkaballapura"
+  },
+  {
+    "State": "Karnataka",
+    "District": "Chitradurga",
+    "Matched_State": "KARNATAKA",
+    "Matched_Shapefile_District": "Chitradurga",
+    "Shapefile_District": "Chitradurga",
+    "Organization": "Chitradurga"
+  },
+  {
+    "State": "Madhya Pradesh",
+    "District": "Dewas",
+    "Matched_State": "MADHYA PRADESH",
+    "Matched_Shapefile_District": "Dewas",
+    "Shapefile_District": "Dewas",
+    "Organization": "Dewas"
+  },
+  {
+    "State": "Madhya Pradesh",
+    "District": "Betul",
+    "Matched_State": "MADHYA PRADESH",
+    "Matched_Shapefile_District": "Betul",
+    "Shapefile_District": "Betul",
+    "Organization": "Betul"
+  },
+  {
+    "State": "Madhya Pradesh",
+    "District": "Dewas",
+    "Matched_State": "MADHYA PRADESH",
+    "Matched_Shapefile_District": "Dewas",
+    "Shapefile_District": "Dewas",
+    "Organization": "Dewas"
+  },
+  {
+    "State": "Madhya Pradesh",
+    "District": "Barwani",
+    "Matched_State": "MADHYA PRADESH",
+    "Matched_Shapefile_District": "Barwani",
+    "Shapefile_District": "Barwani",
+    "Organization": "Barwani"
+  },
+  {
+    "State": "Madhya Pradesh",
+    "District": "Chhatarpur",
+    "Matched_State": "MADHYA PRADESH",
+    "Matched_Shapefile_District": "Chhatarpur",
+    "Shapefile_District": "Chhatarpur",
+    "Organization": "Chhatarpur"
+  },
+  {
+    "State": "Madhya Pradesh",
+    "District": "Panna",
+    "Matched_State": "MADHYA PRADESH",
+    "Matched_Shapefile_District": "Panna",
+    "Shapefile_District": "Panna",
+    "Organization": "Panna"
+  },
+  {
+    "State": "Madhya Pradesh",
+    "District": "Niwari",
+    "Matched_State": "MADHYA PRADESH",
+    "Matched_Shapefile_District": "Niwari",
+    "Shapefile_District": "Niwari",
+    "Organization": "Niwari"
+  },
+  {
+    "State": "Madhya Pradesh",
+    "District": "Damoh",
+    "Matched_State": "MADHYA PRADESH",
+    "Matched_Shapefile_District": "Damoh",
+    "Shapefile_District": "Damoh",
+    "Organization": "Damoh"
+  },
+  {
+    "State": "Maharashtra",
+    "District": "Wardha",
+    "Matched_State": "MAHARASHTRA",
+    "Matched_Shapefile_District": "Wardha",
+    "Shapefile_District": "Wardha",
+    "Organization": "Wardha"
+  },
+  {
+    "State": "Maharashtra",
+    "District": "Nanded",
+    "Matched_State": "MAHARASHTRA",
+    "Matched_Shapefile_District": "Nanded",
+    "Shapefile_District": "Nanded",
+    "Organization": "Nanded"
+  },
+  {
+    "State": "Maharashtra",
+    "District": "Beed District",
+    "Matched_State": "MAHARASHTRA",
+    "Matched_Shapefile_District": "Bid",
+    "Shapefile_District": "Bid",
+    "Organization": "Beed District"
+  },
+  {
+    "State": "Maharashtra",
+    "District": "Nashik",
+    "Matched_State": "MAHARASHTRA",
+    "Matched_Shapefile_District": "Nashik",
+    "Shapefile_District": "Nashik",
+    "Organization": "Nashik"
+  },
+  {
+    "State": "Meghalaya",
+    "District": "Eastern West Khasi Hills",
+    "Matched_State": "MEGHALAYA",
+    "Matched_Shapefile_District": "South West Khasi Hills",
+    "Shapefile_District": "South West Khasi Hills",
+    "Organization": "Eastern West Khasi Hills"
+  },
+  {
+    "State": "Meghalaya",
+    "District": "West Khasi Hills",
+    "Matched_State": "MEGHALAYA",
+    "Matched_Shapefile_District": "West Khasi Hills",
+    "Shapefile_District": "West Khasi Hills",
+    "Organization": "West Khasi Hills"
+  },
+  {
+    "State": "Mizoram",
+    "District": "Serchhip",
+    "Matched_State": "MIZORAM",
+    "Matched_Shapefile_District": "Serchhip",
+    "Shapefile_District": "Serchhip",
+    "Organization": "Serchhip"
+  },
+  {
+    "State": "Mizoram",
+    "District": "Lunglei",
+    "Matched_State": "MIZORAM",
+    "Matched_Shapefile_District": "Lunglei",
+    "Shapefile_District": "Lunglei",
+    "Organization": "Lunglei"
+  },
+  {
+    "State": "Nagaland",
+    "District": "Tuensang",
+    "Matched_State": "NAGALAND",
+    "Matched_Shapefile_District": "Tuensang",
+    "Shapefile_District": "Tuensang",
+    "Organization": "Tuensang"
+  },
+  {
+    "State": "Nagaland",
+    "District": "Kiphire",
+    "Matched_State": "NAGALAND",
+    "Matched_Shapefile_District": "Kiphire",
+    "Shapefile_District": "Kiphire",
+    "Organization": "Kiphire"
+  },
+  {
+    "State": "Odisha",
+    "District": "Malkangiri",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Malkangiri",
+    "Shapefile_District": "Malkangiri",
+    "Organization": "Malkangiri"
+  },
+  {
+    "State": "Odisha",
+    "District": "Koraput",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Koraput",
+    "Shapefile_District": "Koraput",
+    "Organization": "Koraput"
+  },
+  {
+    "State": "Odisha",
+    "District": "Mayurbanj",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Mayurbhanj",
+    "Shapefile_District": "Mayurbhanj",
+    "Organization": "Mayurbanj"
+  },
+  {
+    "State": "Odisha",
+    "District": "Sundergarh",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Sundargarh",
+    "Shapefile_District": "Sundargarh",
+    "Organization": "Sundergarh"
+  },
+  {
+    "State": "Odisha",
+    "District": "Koraput",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Koraput",
+    "Shapefile_District": "Koraput",
+    "Organization": "Koraput"
+  },
+  {
+    "State": "Odisha",
+    "District": "Sundargarh",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Sundargarh",
+    "Shapefile_District": "Sundargarh",
+    "Organization": "Sundargarh"
+  },
+  {
+    "State": "Odisha",
+    "District": "Bolangir",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Balangir",
+    "Shapefile_District": "Balangir",
+    "Organization": "Bolangir"
+  },
+  {
+    "State": "Odisha",
+    "District": "Mayurbhanj",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Mayurbhanj",
+    "Shapefile_District": "Mayurbhanj",
+    "Organization": "Mayurbhanj"
+  },
+  {
+    "State": "Odisha",
+    "District": "Dhenkanal",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Dhenkanal",
+    "Shapefile_District": "Dhenkanal",
+    "Organization": "Dhenkanal"
+  },
+  {
+    "State": "Odisha",
+    "District": "Kandhamal",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Kandhamal",
+    "Shapefile_District": "Kandhamal",
+    "Organization": "Kandhamal"
+  },
+  {
+    "State": "Odisha",
+    "District": "Koraput",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Koraput",
+    "Shapefile_District": "Koraput",
+    "Organization": "Koraput"
+  },
+  {
+    "State": "Odisha",
+    "District": "Gajapati",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Gajapati",
+    "Shapefile_District": "Gajapati",
+    "Organization": "Gajapati"
+  },
+  {
+    "State": "Odisha",
+    "District": "Nayagarh",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Nayagarh",
+    "Shapefile_District": "Nayagarh",
+    "Organization": "Nayagarh"
+  },
+  {
+    "State": "Rajasthan",
+    "District": "Sikar",
+    "Matched_State": "RAJASTHAN",
+    "Matched_Shapefile_District": "Sikar",
+    "Shapefile_District": "Sikar",
+    "Organization": "Sikar"
+  },
+  {
+    "State": "Tamil Nadu",
+    "District": "Namakkal",
+    "Matched_State": "TAMIL NADU",
+    "Matched_Shapefile_District": "Namakkal",
+    "Shapefile_District": "Namakkal",
+    "Organization": "Namakkal"
+  },
+  {
+    "State": "Telangana",
+    "District": "Bhadradri Kothagudem",
+    "Matched_State": "TELANGANA",
+    "Matched_Shapefile_District": "Bhadradri Kothagudem",
+    "Shapefile_District": "Bhadradri Kothagudem",
+    "Organization": "Bhadradri Kothagudem"
+  },
+  {
+    "State": "Telangana",
+    "District": "Asifabad",
+    "Matched_State": "TELANGANA",
+    "Matched_Shapefile_District": "Adilabad",
+    "Shapefile_District": "Adilabad",
+    "Organization": "Asifabad"
+  },
+  {
+    "State": "Telangana",
+    "District": "Vikarabad",
+    "Matched_State": "TELANGANA",
+    "Matched_Shapefile_District": "Vikarabad",
+    "Shapefile_District": "Vikarabad",
+    "Organization": "Vikarabad"
+  },
+  {
+    "State": "Telangana",
+    "District": "Nagarkurnool",
+    "Matched_State": "TELANGANA",
+    "Matched_Shapefile_District": "Nagarkurnool",
+    "Shapefile_District": "Nagarkurnool",
+    "Organization": "Nagarkurnool"
+  },
+  {
+    "State": "Telangana",
+    "District": "Medak",
+    "Matched_State": "TELANGANA",
+    "Matched_Shapefile_District": "Medak",
+    "Shapefile_District": "Medak",
+    "Organization": "Medak"
+  },
+  {
+    "State": "Telangana",
+    "District": "Narayanpet",
+    "Matched_State": "TELANGANA",
+    "Matched_Shapefile_District": "Narayanpet",
+    "Shapefile_District": "Narayanpet",
+    "Organization": "Narayanpet"
+  },
+  {
+    "State": "Telangana",
+    "District": "Medchal-Malkajgiri",
+    "Matched_State": "TELANGANA",
+    "Matched_Shapefile_District": "Medchal Malkajgiri",
+    "Shapefile_District": "Medchal Malkajgiri",
+    "Organization": "Medchal-Malkajgiri"
+  },
+  {
+    "State": "Telangana",
+    "District": "Khammam",
+    "Matched_State": "TELANGANA",
+    "Matched_Shapefile_District": "Khammam",
+    "Shapefile_District": "Khammam",
+    "Organization": "Khammam"
+  },
+  {
+    "State": "Uttar Pradesh",
+    "District": "Chitrakoot",
+    "Matched_State": "UTTAR PRADESH",
+    "Matched_Shapefile_District": "Chitrakoot",
+    "Shapefile_District": "Chitrakoot",
+    "Organization": "Chitrakoot"
+  },
+  {
+    "State": "Uttar Pradesh",
+    "District": "Banda",
+    "Matched_State": "UTTAR PRADESH",
+    "Matched_Shapefile_District": "Banda",
+    "Shapefile_District": "Banda",
+    "Organization": "Banda"
+  },
+  {
+    "State": "Uttar Pradesh",
+    "District": "Mahoba",
+    "Matched_State": "UTTAR PRADESH",
+    "Matched_Shapefile_District": "Mahoba",
+    "Shapefile_District": "Mahoba",
+    "Organization": "Mahoba"
+  },
+  {
+    "State": "West Bengal",
+    "District": "Kalimpong",
+    "Matched_State": "WEST BENGAL",
+    "Matched_Shapefile_District": "Kalimpong",
+    "Shapefile_District": "Kalimpong",
+    "Organization": "Kalimpong"
+  },
+  {
+    "State": "West Bengal",
+    "District": "Bankura",
+    "Matched_State": "WEST BENGAL",
+    "Matched_Shapefile_District": "Bankura",
+    "Shapefile_District": "Bankura",
+    "Organization": "Bankura"
+  },
+  {
+    "State": "West Bengal",
+    "District": "Purulia",
+    "Matched_State": "WEST BENGAL",
+    "Matched_Shapefile_District": "Puruliya",
+    "Shapefile_District": "Puruliya",
+    "Organization": "Purulia"
+  },
+  {
+    "State": "West Bengal",
+    "District": "South 24 Parganas",
+    "Matched_State": "WEST BENGAL",
+    "Matched_Shapefile_District": "South Twenty Four Pargan*",
+    "Shapefile_District": "South Twenty Four Pargan*",
+    "Organization": "South 24 Parganas"
+  }
+];
+
+// ==========================================
+// GLOBALS
+// ==========================================
+let rawCsoData = [];
+let cleanCsoData = [];
+let stateGeoJSON = null;
+let districtGeoJSON = null;
+
+let map = null;
+let activeBasemap = 'satellite';
+let basemapLayers = {};
+
+let stateBoundaryLayer = null;
+let districtBoundaryLayer = null;
+let csoMarkerGroup = null;
+let selectedStateVal = "";
+
+let activeDistrictLayer = null;
+let stateLookup = {};
+let districtLookup = {};
+
+// Lookup maps for state presence counting
+let statePresenceCountMap = {};
+let stateTotalDistrictsMap = {};
+
+let stateChartInstance = null;
+
+const DOT_COLORS = [
+    '#f59e0b', '#10b981', '#3b82f6', '#f43f5e', '#06b6d4',
+    '#84cc16', '#ec4899', '#a855f7', '#fb923c', '#14b8a6'
+];
+
+function getDotColor(index) {
+    return DOT_COLORS[index % DOT_COLORS.length];
+}
+
+function getMapPadding(basePadding = 20) {
+    const sidebarEl = document.getElementById('sidebar');
+    const isCollapsed = sidebarEl && sidebarEl.classList.contains('collapsed');
+    if (window.innerWidth > 768 && !isCollapsed) {
+        return {
+            paddingTopLeft: [380 + basePadding, basePadding],
+            paddingBottomRight: [basePadding, basePadding]
+        };
+    } else {
+        return { padding: [basePadding, basePadding] };
+    }
+}
+
+// Name Cleaning Helpers
+function cleanStateName(name) {
+    if (!name) return "";
+    let s = name.trim().toUpperCase();
+    if (s === "CHHATTISGARH" || s === "CHHATISGARH") return "CHHATTISHGARH";
+    if (s === "TELANGANA") return "TELENGANA";
+    if (s === "TAMIL NADU" || s === "TAMILNADU") return "TAMILNADU";
+    if (s === "ANDAMAN & NICOBAR") return "ANDAMAN & NICOBAR ISLANDS";
+    if (s === "JAMMU & KASHMIR") return "JAMMU AND KASHMIR";
+    return s;
+}
+
+function cleanShapefileDist(name) {
+    if (!name) return "";
+    let d = name.trim().toUpperCase();
+    if (d === "BENGALURU URBAN") return "BANGALORE";
+    if (d === "KANGAR") return "KANGRA";
+    return d;
+}
+
+function deduplicateCsoData(data) {
+    const seen = new Set();
+    return data.filter(item => {
+        const org   = (item.Organization || '').trim().toUpperCase();
+        const state = cleanStateName(item.State).toUpperCase();
+        const dist  = cleanShapefileDist(item.Shapefile_District || item.Matched_Shapefile_District).toUpperCase();
+        const key   = `${org}|${state}|${dist}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+}
+
+function getLightTileUrl(url) {
+    let z, x, y;
+    if (url.includes('arcgisonline.com')) {
+        const m = url.match(/\/tile\/(\d+)\/(\d+)\/(\d+)/);
+        if (m) { z = m[1]; y = m[2]; x = m[3]; }
+    } else if (url.includes('basemaps.cartocdn.com')) {
+        const m = url.match(/\/(?:dark|light)_all\/(\d+)\/(\d+)\/(\d+)/);
+        if (m) { z = m[1]; x = m[2]; y = m[3]; }
+    } else {
+        const parts = url.split('?')[0].split('/');
+        if (parts.length >= 3) {
+            const ly = parts[parts.length - 1].split('.')[0];
+            const lx = parts[parts.length - 2];
+            const lz = parts[parts.length - 3];
+            if (!isNaN(lz) && !isNaN(lx) && !isNaN(ly)) { z = lz; x = lx; y = ly; }
+        }
+    }
+    if (z !== undefined && x !== undefined && y !== undefined) {
+        const sub = ['a', 'b', 'c', 'd'][Math.abs(parseInt(x) + parseInt(y)) % 4];
+        return `https://${sub}.basemaps.cartocdn.com/light_all/${z}/${x}/${y}.png`;
+    }
+    return url;
+}
+
+// TABS
+const tabOrgsBtn = document.getElementById('tabOrgsBtn');
+const tabAnalyticsBtn = document.getElementById('tabAnalyticsBtn');
+const tabOrgs = document.getElementById('tabOrgs');
+const tabAnalytics = document.getElementById('tabAnalytics');
+
+tabOrgsBtn.addEventListener('click', () => {
+    tabOrgsBtn.classList.add('active');
+    tabAnalyticsBtn.classList.remove('active');
+    tabOrgs.classList.remove('hidden');
+    tabAnalytics.classList.add('hidden');
+});
+tabAnalyticsBtn.addEventListener('click', () => {
+    tabAnalyticsBtn.classList.add('active');
+    tabOrgsBtn.classList.remove('active');
+    tabAnalytics.classList.remove('hidden');
+    tabOrgs.classList.add('hidden');
+    if (stateChartInstance) stateChartInstance.resize();
+});
+
+// MOBILE SIDEBAR
+const sidebar = document.getElementById('sidebar');
+const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+mobileMenuBtn.addEventListener('click', () => sidebar.classList.toggle('open'));
+sidebar.addEventListener('click', (e) => {
+    if (window.innerWidth < 768 && e.target === sidebar) sidebar.classList.remove('open');
+});
+
+// DESKTOP SIDEBAR TOGGLE
+const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
+if (toggleSidebarBtn) {
+    toggleSidebarBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        sidebar.classList.toggle('collapsed');
+        if (selectedStateVal) {
+            zoomToSelectedState(selectedStateVal);
+        } else {
+            map.invalidateSize();
+        }
+    });
+}
+
+// BASEMAP SWITCHER
+function setBasemap(style) {
+    Object.values(basemapLayers).forEach(layer => {
+        if (map.hasLayer(layer)) map.removeLayer(layer);
+    });
+    if (basemapLayers[style]) {
+        basemapLayers[style].addTo(map);
+        activeBasemap = style;
+    }
+    const selectEl = document.getElementById('basemapSelect');
+    if (selectEl && selectEl.value !== style) {
+        selectEl.value = style;
+    }
+}
+
+// DOWNLOAD MAP IMAGE
+async function downloadMapImage() {
+    const btn = document.getElementById('downloadMapBtn');
+    const origHTML = btn.innerHTML;
+    btn.innerHTML = `<svg style="width:14px;height:14px;animation:spin 0.8s linear infinite;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Capturing…`;
+    btn.disabled = true;
+
+    try {
+        const mapEl = document.getElementById('map');
+        const W = mapEl.offsetWidth;
+        const H = mapEl.offsetHeight;
+        const DPR = window.devicePixelRatio || 1;
+        const CW = W * DPR;
+        const CH = H * DPR;
+
+        const outCanvas = document.createElement('canvas');
+        outCanvas.width = CW;
+        outCanvas.height = CH;
+        const ctx = outCanvas.getContext('2d');
+
+        const tileImgs = mapEl.querySelectorAll('.leaflet-tile-pane img.leaflet-tile');
+        const imgLoadPromises = [];
+
+        tileImgs.forEach(img => {
+            const rect = img.getBoundingClientRect();
+            const mapRect = mapEl.getBoundingClientRect();
+            const x = (rect.left - mapRect.left) * DPR;
+            const y = (rect.top  - mapRect.top)  * DPR;
+            const tw = rect.width  * DPR;
+            const th = rect.height * DPR;
+
+            const lightSrc = getLightTileUrl(img.src);
+            const p = new Promise(resolve => {
+                const tmp = new Image();
+                tmp.crossOrigin = 'anonymous';
+                tmp.onload  = () => { try { ctx.drawImage(tmp, x, y, tw, th); } catch(e) {} resolve(); };
+                tmp.onerror = () => resolve();
+                tmp.src = lightSrc;
+            });
+            imgLoadPromises.push(p);
+        });
+
+        ctx.globalCompositeOperation = 'destination-over';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, CW, CH);
+        ctx.globalCompositeOperation = 'source-over';
+
+        await Promise.all(imgLoadPromises);
+
+        const svgEls = mapEl.querySelectorAll('.leaflet-overlay-pane svg, .leaflet-marker-pane svg');
+        const svgPromises = [];
+        svgEls.forEach(svgEl => {
+            const rect = svgEl.getBoundingClientRect();
+            const mapRect = mapEl.getBoundingClientRect();
+            const x = (rect.left - mapRect.left) * DPR;
+            const y = (rect.top  - mapRect.top)  * DPR;
+            const tw = rect.width  * DPR;
+            const th = rect.height * DPR;
+            const svgData = new XMLSerializer().serializeToString(svgEl);
+            const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(svgBlob);
+            const p = new Promise(resolve => {
+                const img = new Image();
+                img.onload  = () => { ctx.drawImage(img, x, y, tw, th); URL.revokeObjectURL(url); resolve(); };
+                img.onerror = () => { URL.revokeObjectURL(url); resolve(); };
+                img.src = url;
+            });
+            svgPromises.push(p);
+        });
+        await Promise.all(svgPromises);
+
+        const markerCanvases = mapEl.querySelectorAll('.leaflet-marker-pane canvas');
+        markerCanvases.forEach(mc => {
+            const rect = mc.getBoundingClientRect();
+            const mapRect = mapEl.getBoundingClientRect();
+            ctx.drawImage(mc, (rect.left - mapRect.left)*DPR, (rect.top - mapRect.top)*DPR, rect.width*DPR, rect.height*DPR);
+        });
+
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+        const title = selectedStateVal
+            ? `WASSAN Presence – Foot on the Ground (${document.getElementById('stateSelect').selectedOptions[0].text})`
+            : 'WASSAN Presence – Foot on the Ground (India View)';
+
+        // Title Box (top-left)
+        const boxW = 480 * DPR;
+        const boxH = 78 * DPR;
+        ctx.shadowColor = 'rgba(0,0,0,0.10)';
+        ctx.shadowBlur  = 8 * DPR;
+        ctx.fillStyle   = 'rgba(255,255,255,0.95)';
+        ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+        ctx.lineWidth   = 1 * DPR;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(16 * DPR, 16 * DPR, boxW, boxH, 8 * DPR);
+        else               ctx.rect(16 * DPR, 16 * DPR, boxW, boxH);
+        ctx.fill();
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        ctx.fillStyle  = '#1f2937';
+        ctx.font       = `bold ${15 * DPR}px Inter, sans-serif`;
+        ctx.textAlign  = 'left';
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText(title, 30 * DPR, 48 * DPR);
+
+        ctx.fillStyle = '#6b7280';
+        ctx.font      = `${9 * DPR}px Inter, sans-serif`;
+        ctx.fillText(`WASSAN Presence Initiative   |   Generated on ${dateStr}`, 30 * DPR, 72 * DPR);
+
+        const link = document.createElement('a');
+        const suffix = selectedStateVal ? selectedStateVal.toLowerCase().replace(/ /g,'_') : 'india';
+        link.download = `wassan_foot_on_the_ground_${suffix}_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.png`;
+        link.href = outCanvas.toDataURL('image/png');
+        link.click();
+
+    } catch(err) {
+        console.error('Map capture failed:', err);
+        alert('Map capture failed: ' + err.message);
+    }
+
+    btn.innerHTML = origHTML;
+    btn.disabled = false;
+}
+
+// INITIALIZATION
+document.addEventListener('DOMContentLoaded', () => {
+    map = L.map('map', {
+        zoomControl: false,
+        attributionControl: false
+    });
+    map.setView([22.5, 82.5], 8);
+
+    L.control.zoom({ position: 'bottomleft' }).addTo(map);
+
+    basemapLayers.dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
+    basemapLayers.satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, crossOrigin: '' });
+    basemapLayers.osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, crossOrigin: '' });
+    basemapLayers.light = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19, crossOrigin: '' });
+    basemapLayers.satellite.addTo(map);
+
+    csoMarkerGroup = L.layerGroup().addTo(map);
+
+    const progress = document.getElementById('progressFill');
+
+    const initializeMapWithData = (csoDataRes, statesGeojsonRes, districtsGeojsonRes) => {
+        progress.style.width = '100%';
+
+        const csoData = csoDataRes || EMBEDDED_CSO_DATA;
+        rawCsoData = deduplicateCsoData(csoData);
+
+        stateGeoJSON = statesGeojsonRes || (typeof STATE_BOUNDARIES_GEOJSON !== 'undefined' ? STATE_BOUNDARIES_GEOJSON : null);
+        districtGeoJSON = districtsGeojsonRes || (typeof DISTRICT_BOUNDARIES_GEOJSON !== 'undefined' ? DISTRICT_BOUNDARIES_GEOJSON : null);
+
+        // Process data structures
+        processCsoData();
+        calculateStatePresenceCounts();
+
+        initializeDropdowns();
+        updateStatsSummary(rawCsoData);
+        renderOrgList(rawCsoData);
+        renderStateChart(rawCsoData);
+        renderMapLayers();
+
+        setTimeout(() => {
+            document.getElementById('loader').classList.add('hidden');
+        }, 300);
+    };
+
+    // Load GeoJSONs and data (with script tag fallback to bypass file:// CORS policy)
+    const fetchJson = (url, progVal) => fetch(url)
+        .then(r => { progress.style.width = progVal; return r.json(); })
+        .catch(err => {
+            console.warn(`Could not fetch ${url}, using fallback data.`, err);
+            return null;
+        });
+
+    Promise.all([
+        fetchJson('cso_data.json', '30%'),
+        fetchJson('state_boundaries_simplified.geojson', '60%'),
+        fetchJson('districts_boundaries_simplified.geojson', '90%')
+    ]).then(([csoDataRes, statesGeojsonRes, districtsGeojsonRes]) => {
+        initializeMapWithData(csoDataRes, statesGeojsonRes, districtsGeojsonRes);
+    }).catch(err => {
+        console.warn("Fetch failed, falling back to script tag data:", err);
+        initializeMapWithData(null, null, null);
+    });
+});
+
+// DATA PROCESSING
+function processCsoData() {
+    districtLookup = {};
+    rawCsoData.forEach(item => {
+        const stateKey = cleanStateName(item.State).toUpperCase();
+        const distKey = cleanShapefileDist(item.Shapefile_District || item.Matched_Shapefile_District).toUpperCase();
+        const key = `${stateKey}|${distKey}`;
+        if (!districtLookup[key]) districtLookup[key] = [];
+        districtLookup[key].push(item);
+    });
+}
+
+function calculateStatePresenceCounts() {
+    statePresenceCountMap = {};
+    stateTotalDistrictsMap = {};
+
+    // 1. Calculate unique present districts per state from rawCsoData
+    rawCsoData.forEach(item => {
+        const stateKey = cleanStateName(item.State).toUpperCase();
+        const distKey = cleanShapefileDist(item.Shapefile_District || item.Matched_Shapefile_District).toUpperCase();
+        if (!statePresenceCountMap[stateKey]) {
+            statePresenceCountMap[stateKey] = new Set();
+        }
+        statePresenceCountMap[stateKey].add(distKey);
+    });
+
+    // 2. Calculate total districts per state from districtGeoJSON
+    if (districtGeoJSON && districtGeoJSON.features) {
+        districtGeoJSON.features.forEach(feat => {
+            const stateKey = cleanStateName(feat.properties.State_Name).toUpperCase();
+            stateTotalDistrictsMap[stateKey] = (stateTotalDistrictsMap[stateKey] || 0) + 1;
+        });
+    }
+}
+
+function getPresentDistrictCountForState(stateKey) {
+    const k = cleanStateName(stateKey).toUpperCase();
+    return statePresenceCountMap[k] ? statePresenceCountMap[k].size : 0;
+}
+
+function getTotalDistrictCountForState(stateKey) {
+    const k = cleanStateName(stateKey).toUpperCase();
+    return stateTotalDistrictsMap[k] || 0;
+}
+
+// DROPDOWNS
+function initializeDropdowns() {
+    const stateSelect = document.getElementById('stateSelect');
+    stateSelect.innerHTML = '<option value="">All States – National View</option>';
+    
+    const stateMap = new Map();
+    rawCsoData.forEach(item => {
+        const key = cleanStateName(item.State).toUpperCase();
+        if (key && !stateMap.has(key)) {
+            stateMap.set(key, item.State);
+        }
+    });
+
+    const sortedKeys = [...stateMap.keys()].sort((a, b) => stateMap.get(a).localeCompare(stateMap.get(b)));
+    sortedKeys.forEach(key => {
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.innerText = stateMap.get(key);
+        stateSelect.appendChild(opt);
+    });
+
+    stateSelect.onchange = () => {
+        applyFilters();
+        zoomToSelectedState(stateSelect.value);
+    };
+    document.getElementById('searchInput').oninput = applyFilters;
+}
+
+// STATS
+function animateCounter(id, target) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    let current = 0;
+    const duration = 700;
+    const stepTime = Math.max(Math.floor(duration / Math.max(target, 1)), 12);
+    const increment = Math.ceil(target / (duration / stepTime));
+    clearInterval(el._timer);
+    el._timer = setInterval(() => {
+        current += increment;
+        if (current >= target) { el.innerText = target.toLocaleString(); clearInterval(el._timer); }
+        else { el.innerText = current.toLocaleString(); }
+    }, stepTime);
+}
+
+function updateStatsSummary(filteredOrgs) {
+    const totalProjects = filteredOrgs.length;
+    const uniqueDistricts = [...new Set(filteredOrgs.map(item => `${cleanStateName(item.State)}|${cleanShapefileDist(item.Shapefile_District || item.Matched_Shapefile_District)}`))].length;
+    const uniqueStates = [...new Set(filteredOrgs.map(item => cleanStateName(item.State)))].length;
+
+    animateCounter('statProjects', totalProjects);
+    animateCounter('statDistricts', uniqueDistricts);
+    animateCounter('statStates', uniqueStates);
+    document.getElementById('filteredOrgsCount').innerText = `${uniqueDistricts} active districts`;
+}
+
+// LIST RENDER
+function renderOrgList(orgList) {
+    const container = document.getElementById('csoList');
+    container.innerHTML = '';
+    if (orgList.length === 0) {
+        container.innerHTML = `<div style="text-align:center;color:#6b7280;padding:24px 0;font-size:13px;">No districts match your search query.</div>`;
+        return;
+    }
+    orgList.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'org-item';
+        div.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+                <div style="font-size:13px;font-weight:700;color:#fff;line-height:1.3;">${item.District}</div>
+                <span class="pill" style="background:rgba(124,58,237,0.18);color:#c4b5fd;flex-shrink:0;">${item.State}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:4px;margin-top:4px;">
+                <svg style="width:11px;height:11px;color:#10b981;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span style="font-size:11px;color:#34d399;font-weight:500;">Foot on the Ground Active</span>
+            </div>
+        `;
+        div.addEventListener('click', () => {
+            const stateKey = cleanStateName(item.State).toUpperCase();
+            const distKey = cleanShapefileDist(item.Shapefile_District || item.Matched_Shapefile_District).toUpperCase();
+            findAndHighlightDistrict(stateKey, distKey);
+            if (window.innerWidth < 768) sidebar.classList.remove('open');
+        });
+        container.appendChild(div);
+    });
+}
+
+// MAP LAYERS
+function getDistrictStyle(feature) {
+    const stateName = cleanStateName(feature.properties.State_Name).toUpperCase();
+    const distName = cleanShapefileDist(feature.properties.Dist_Name).toUpperCase();
+    const key = `${stateName}|${distName}`;
+    const orgCount = (districtLookup[key] || []).length;
+
+    if (selectedStateVal) {
+        if (stateName === selectedStateVal && orgCount > 0) {
+            return {
+                fillColor: '#7c3aed',
+                fillOpacity: 0.75,
+                color: '#ffffff',
+                weight: 1.5,
+                opacity: 1
+            };
+        } else {
+            return { fillOpacity: 0, opacity: 0, weight: 0, stroke: false };
+        }
+    }
+
+    return {
+        fillColor: orgCount > 0 ? '#7c3aed' : 'rgba(30, 41, 59, 0.25)',
+        fillOpacity: orgCount > 0 ? 0.70 : 0.08,
+        color: orgCount > 0 ? '#c4b5fd' : 'rgba(255, 255, 255, 0.22)',
+        weight: orgCount > 0 ? 1.5 : 0.6,
+        opacity: orgCount > 0 ? 0.95 : 0.4
+    };
+}
+
+function renderMapLayers() {
+    if (stateBoundaryLayer && map.hasLayer(stateBoundaryLayer)) map.removeLayer(stateBoundaryLayer);
+    if (districtBoundaryLayer && map.hasLayer(districtBoundaryLayer)) map.removeLayer(districtBoundaryLayer);
+
+    // 1. State Boundaries Layer (with State Hover Tooltip & District Counts)
+    if (stateGeoJSON) {
+        stateBoundaryLayer = L.geoJSON(stateGeoJSON, {
+            style: function(feature) {
+                const stateName = cleanStateName(feature.properties.Name).toUpperCase();
+                const isActive = !selectedStateVal || stateName === selectedStateVal;
+                const presentCount = getPresentDistrictCountForState(stateName);
+                return {
+                    color: isActive ? '#000000' : 'transparent',
+                    weight: isActive ? 2.5 : 0,
+                    opacity: isActive ? 1.0 : 0,
+                    fillColor: presentCount > 0 ? '#7c3aed' : 'transparent',
+                    fillOpacity: presentCount > 0 ? 0.08 : 0,
+                    fill: true
+                };
+            },
+            onEachFeature: function(feature, layer) {
+                const rawName = feature.properties.Name || 'State';
+                const key = cleanStateName(rawName).toUpperCase();
+                stateLookup[key] = layer;
+
+                const presentCount = getPresentDistrictCountForState(key);
+                const totalCount = getTotalDistrictCountForState(key);
+
+                // Build rich tooltip showing exact count of districts present in state
+                const stateTooltipContent = `
+                    <div style="padding:6px 10px;font-family:'Inter',sans-serif;min-width:190px;">
+                        <div style="font-size:14px;font-weight:800;color:#ffffff;letter-spacing:-0.01em;">${rawName}</div>
+                        <div style="display:flex;align-items:center;gap:8px;margin-top:6px;padding:6px 10px;background:rgba(124,58,237,0.3);border:1px solid rgba(139,92,246,0.5);border-radius:8px;">
+                            <span style="font-size:18px;font-weight:800;color:#f59e0b;">${presentCount}</span>
+                            <span style="font-size:10px;font-weight:800;color:#ffffff;text-transform:uppercase;letter-spacing:0.06em;">Districts Present</span>
+                        </div>
+                        <div style="font-size:10px;color:#d1d5db;margin-top:6px;">Foot on the Ground: <strong style="color:#ffffff;">${presentCount}</strong> of <strong>${totalCount}</strong> districts</div>
+                    </div>
+                `;
+
+                layer.bindTooltip(stateTooltipContent, {
+                    className: 'cso-tooltip state-hover-tooltip',
+                    direction: 'top',
+                    sticky: true,
+                    opacity: 0.96
+                });
+
+                layer.on({
+                    mouseover: function(e) {
+                        layer.setStyle({
+                            color: '#f59e0b',
+                            weight: 3.5,
+                            opacity: 1,
+                            fillOpacity: 0.20
+                        });
+                        layer.bringToFront();
+                    },
+                    mouseout: function(e) {
+                        const isActive = !selectedStateVal || key === selectedStateVal;
+                        layer.setStyle({
+                            color: isActive ? '#000000' : 'transparent',
+                            weight: isActive ? 2.5 : 0,
+                            opacity: isActive ? 1.0 : 0,
+                            fillOpacity: presentCount > 0 ? 0.08 : 0
+                        });
+                    },
+                    click: function(e) {
+                        const selectEl = document.getElementById('stateSelect');
+                        selectEl.value = key;
+                        applyFilters();
+                        zoomToSelectedState(key);
+                        L.DomEvent.stopPropagation(e);
+                    }
+                });
+            }
+        }).addTo(map);
+    }
+
+    // 2. District Boundaries Layer
+    if (districtGeoJSON) {
+        districtBoundaryLayer = L.geoJSON(districtGeoJSON, {
+            style: function(feature) { return getDistrictStyle(feature); },
+            onEachFeature: function(feature, layer) {
+                const stateName = cleanStateName(feature.properties.State_Name).toUpperCase();
+                const distName = cleanShapefileDist(feature.properties.Dist_Name).toUpperCase();
+                const key = `${stateName}|${distName}`;
+                const orgList = districtLookup[key] || [];
+
+                bindDistrictTooltip(layer, feature, orgList);
+
+                layer.on({
+                    mouseover: function(e) {
+                        const sn = cleanStateName(e.target.feature.properties.State_Name).toUpperCase();
+                        const dn = cleanShapefileDist(e.target.feature.properties.Dist_Name).toUpperCase();
+                        const k = `${sn}|${dn}`;
+                        const cnt = (districtLookup[k] || []).length;
+                        if (selectedStateVal && (sn !== selectedStateVal || cnt === 0)) return;
+                        if (layer !== activeDistrictLayer) {
+                            layer.setStyle({ color: '#f59e0b', weight: 2.5, fillOpacity: 0.88 });
+                        }
+                    },
+                    mouseout: function(e) {
+                        const sn = cleanStateName(e.target.feature.properties.State_Name).toUpperCase();
+                        const dn = cleanShapefileDist(e.target.feature.properties.Dist_Name).toUpperCase();
+                        const k = `${sn}|${dn}`;
+                        const cnt = (districtLookup[k] || []).length;
+                        if (selectedStateVal && (sn !== selectedStateVal || cnt === 0)) return;
+                        if (layer !== activeDistrictLayer) districtBoundaryLayer.resetStyle(layer);
+                    },
+                    click: function(e) {
+                        const sn = cleanStateName(e.target.feature.properties.State_Name).toUpperCase();
+                        const dn = cleanShapefileDist(e.target.feature.properties.Dist_Name).toUpperCase();
+                        const k = `${sn}|${dn}`;
+                        const cnt = (districtLookup[k] || []).length;
+                        if (selectedStateVal && (sn !== selectedStateVal || cnt === 0)) return;
+                        selectDistrict(feature, layer, e.latlng);
+                        L.DomEvent.stopPropagation(e);
+                    }
+                });
+            }
+        }).addTo(map);
+    }
+
+    map.fitBounds([[7.0, 66.0], [37.5, 98.0]], getMapPadding(10));
+}
+
+function bindDistrictTooltip(layer, feature, orgList) {
+    const sn = cleanStateName(feature.properties.State_Name).toUpperCase();
+    const presentCount = getPresentDistrictCountForState(sn);
+    const totalCount = getTotalDistrictCountForState(sn);
+    const isPresent = orgList.length > 0;
+
+    const excelDistName = isPresent ? orgList[0].District : feature.properties.Dist_Name;
+
+    const content = `
+        <div style="display:flex;flex-direction:column;gap:3px;font-family:'Inter',sans-serif;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+                <span style="font-weight:800;color:#fff;font-size:13px;">${excelDistName}</span>
+                ${isPresent ? '<span class="pill" style="background:rgba(16,185,129,0.25);color:#34d399;border:1px solid rgba(16,185,129,0.3);">Active</span>' : ''}
+            </div>
+            <span style="font-size:10px;color:#a78bfa;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-top:1px;">${feature.properties.State_Name}</span>
+            <div style="border-top:1px solid rgba(255,255,255,0.12);margin-top:5px;padding-top:5px;display:flex;flex-direction:column;gap:3px;">
+                <span style="font-size:10px;color:#f3f4f6;">Districts Present in State: <strong style="color:#f59e0b;font-size:11px;">${presentCount}</strong></span>
+                <span style="font-size:9px;color:#9ca3af;">State Coverage: ${presentCount} of ${totalCount} districts</span>
+            </div>
+        </div>
+    `;
+    layer.bindTooltip(content, { className: 'cso-tooltip', direction: 'top', sticky: true });
+}
+
+// FILTERS
+function applyFilters() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+    const selectedState = document.getElementById('stateSelect').value.toUpperCase();
+    selectedStateVal = selectedState;
+
+    cleanCsoData = rawCsoData.filter(item => {
+        const matchesSearch = !searchTerm ||
+            item.District.toLowerCase().includes(searchTerm) ||
+            item.State.toLowerCase().includes(searchTerm);
+        const matchesState = !selectedState || cleanStateName(item.State).toUpperCase() === selectedState;
+        return matchesSearch && matchesState;
+    });
+
+    updateStatsSummary(cleanCsoData);
+    renderOrgList(cleanCsoData);
+
+    if (stateBoundaryLayer) {
+        stateBoundaryLayer.eachLayer(layer => {
+            const sn = cleanStateName(layer.feature.properties.Name).toUpperCase();
+            const isActive = !selectedStateVal || sn === selectedStateVal;
+            const presentCount = getPresentDistrictCountForState(sn);
+            layer.setStyle({
+                color: isActive ? '#000000' : 'transparent',
+                weight: isActive ? 2.5 : 0,
+                opacity: isActive ? 1.0 : 0,
+                fillOpacity: presentCount > 0 ? 0.08 : 0
+            });
+        });
+    }
+
+    if (districtBoundaryLayer) {
+        districtBoundaryLayer.eachLayer(layer => {
+            districtBoundaryLayer.resetStyle(layer);
+            const sn = cleanStateName(layer.feature.properties.State_Name).toUpperCase();
+            const dn = cleanShapefileDist(layer.feature.properties.Dist_Name).toUpperCase();
+            const k = `${sn}|${dn}`;
+            const orgList = districtLookup[k] || [];
+            const isVisible = !selectedStateVal || (sn === selectedStateVal && orgList.length > 0);
+
+            if (isVisible) {
+                bindDistrictTooltip(layer, layer.feature, orgList);
+            } else {
+                layer.unbindTooltip();
+            }
+
+            if (searchTerm && isVisible) {
+                const matchingOrgs = cleanCsoData.filter(item =>
+                    cleanStateName(item.State).toUpperCase() === sn &&
+                    cleanShapefileDist(item.Shapefile_District || item.Matched_Shapefile_District).toUpperCase() === dn
+                );
+                if (matchingOrgs.length > 0) {
+                    layer.setStyle({ fillColor: '#7c3aed', fillOpacity: 0.85, color: '#f59e0b', weight: 2, opacity: 1 });
+                } else {
+                    layer.setStyle({ fillOpacity: 0.04, opacity: 0.1, weight: 0.2 });
+                    layer.unbindTooltip();
+                }
+            }
+        });
+    }
+}
+
+// DISTRICT SELECTION
+function selectDistrict(feature, layer, clickLatLng) {
+    if (activeDistrictLayer) districtBoundaryLayer.resetStyle(activeDistrictLayer);
+    activeDistrictLayer = layer;
+    layer.setStyle({ color: '#f59e0b', weight: 3, fillOpacity: 0.88 });
+
+    const stateName = cleanStateName(feature.properties.State_Name).toUpperCase();
+    const distName = cleanShapefileDist(feature.properties.Dist_Name).toUpperCase();
+    const key = `${stateName}|${distName}`;
+    const orgList = districtLookup[key] || [];
+    const presentCount = getPresentDistrictCountForState(stateName);
+
+    let popupContent = `
+        <div style="padding:8px;font-family:'Inter',sans-serif;min-width:220px;">
+            <div style="border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:8px;margin-bottom:8px;">
+                <div style="font-size:14px;font-weight:800;color:#fff;">${orgList.length > 0 ? orgList[0].District : feature.properties.Dist_Name} District</div>
+                <div style="font-size:10px;color:#a78bfa;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-top:2px;">${feature.properties.State_Name}</div>
+            </div>
+            <div style="font-size:10px;color:#34d399;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Foot on the Ground Status</div>
+            <div style="font-size:11px;color:#f3f4f6;background:rgba(16,185,129,0.15);padding:6px 10px;border-radius:6px;border:1px solid rgba(16,185,129,0.3);margin-bottom:8px;">
+                Active WASSAN Foot on the Ground Presence
+            </div>
+            <div style="font-size:10px;color:#9ca3af;">
+                State total present districts: <strong style="color:#f59e0b;">${presentCount}</strong>
+            </div>
+        </div>
+    `;
+
+    L.popup({ className: 'cso-map-popup', offset: [0, -5] })
+        .setLatLng(clickLatLng || layer.getBounds().getCenter())
+        .setContent(popupContent)
+        .openOn(map);
+
+    document.getElementById('selectedDistrictName').innerText = orgList.length > 0 ? orgList[0].District : feature.properties.Dist_Name;
+    document.getElementById('selectedDistrictState').innerText = feature.properties.State_Name;
+    document.getElementById('selectedDistrictCsoCount').innerText = orgList.length;
+
+    const ul = document.getElementById('selectedDistrictOrgs');
+    ul.innerHTML = '';
+    if (orgList.length === 0) {
+        ul.innerHTML = `<li style="font-size:11px;color:#6b7280;font-style:italic;padding:8px 0;">No recorded presence.</li>`;
+    } else {
+        orgList.forEach(org => {
+            const li = document.createElement('li');
+            li.style.cssText = 'font-size:11px;color:#f3f4f6;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:7px 10px;display:flex;align-items:center;justify-content:space-between;font-weight:500;';
+            li.innerHTML = `<span>${org.District}</span><span style="font-size:8px;padding:2px 6px;background:rgba(16,185,129,0.2);color:#34d399;border-radius:4px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">Active</span>`;
+            ul.appendChild(li);
+        });
+    }
+
+    document.getElementById('selectionCard').classList.add('visible');
+}
+
+document.getElementById('clearSelectionBtn').addEventListener('click', () => {
+    if (activeDistrictLayer) { districtBoundaryLayer.resetStyle(activeDistrictLayer); activeDistrictLayer = null; }
+    document.getElementById('selectionCard').classList.remove('visible');
+});
+
+function findAndHighlightDistrict(stateKey, distKey) {
+    if (!districtBoundaryLayer) return;
+    districtBoundaryLayer.eachLayer(layer => {
+        const sn = cleanStateName(layer.feature.properties.State_Name).toUpperCase();
+        const dn = cleanShapefileDist(layer.feature.properties.Dist_Name).toUpperCase();
+        if (sn === stateKey && dn === distKey) {
+            selectDistrict(layer.feature, layer);
+        }
+    });
+}
+
+// STATE ZOOM
+function zoomToSelectedState(stateCleanVal) {
+    csoMarkerGroup.clearLayers();
+
+    if (!stateCleanVal) {
+        map.fitBounds([[7.0, 66.0], [37.5, 98.0]], getMapPadding(10));
+        return;
+    }
+
+    const stateLayer = stateLookup[stateCleanVal.toUpperCase()];
+    if (stateLayer) map.fitBounds(stateLayer.getBounds(), getMapPadding(50));
+
+    const stateOrgs = rawCsoData.filter(org => cleanStateName(org.State).toUpperCase() === stateCleanVal.toUpperCase());
+    const distGroups = {};
+    stateOrgs.forEach(org => {
+        const distKey = cleanShapefileDist(org.Shapefile_District || org.Matched_Shapefile_District).toUpperCase();
+        if (!distGroups[distKey]) distGroups[distKey] = [];
+        distGroups[distKey].push(org);
+    });
+
+    Object.keys(distGroups).forEach(distKey => {
+        let distLayer = null;
+        districtBoundaryLayer.eachLayer(layer => {
+            const dn = cleanShapefileDist(layer.feature.properties.Dist_Name).toUpperCase();
+            const sn = cleanStateName(layer.feature.properties.State_Name).toUpperCase();
+            if (dn === distKey && sn === stateCleanVal.toUpperCase()) distLayer = layer;
+        });
+
+        if (distLayer) {
+            const center = distLayer.getBounds().getCenter();
+            const orgsInDist = distGroups[distKey];
+
+            orgsInDist.forEach((org, idx) => {
+                const dotColor = getDotColor(idx);
+                const marker = L.circleMarker([center.lat, center.lng], {
+                    radius: 7,
+                    fillColor: '#f59e0b',
+                    fillOpacity: 1.0,
+                    color: '#ffffff',
+                    weight: 2,
+                    interactive: true
+                });
+
+                marker.bindTooltip(org.District, {
+                    permanent: true,
+                    direction: 'right',
+                    className: 'cso-marker-label',
+                    offset: [8, 0]
+                });
+
+                const popContent = `
+                    <div style="padding:6px;font-family:'Inter',sans-serif;min-width:160px;">
+                        <div style="font-size:13px;font-weight:800;color:#fff;line-height:1.3;">${org.District}</div>
+                        <div style="font-size:10px;color:#a78bfa;margin-top:4px;text-transform:uppercase;letter-spacing:0.06em;">${org.State}</div>
+                        <div style="font-size:9px;color:#34d399;margin-top:4px;font-weight:700;">Foot on the Ground Active</div>
+                    </div>
+                `;
+                marker.bindPopup(popContent, { className: 'cso-map-popup' });
+
+                marker.on('click', () => {
+                    findAndHighlightDistrict(cleanStateName(org.State).toUpperCase(), cleanShapefileDist(org.Shapefile_District || org.Matched_Shapefile_District).toUpperCase());
+                });
+
+                csoMarkerGroup.addLayer(marker);
+            });
+        }
+    });
+}
+
+// CHART
+function renderStateChart(orgList) {
+    const stateCounts = {};
+    orgList.forEach(item => {
+        stateCounts[item.State] = (stateCounts[item.State] || 0) + 1;
+    });
+
+    const sortedStates = Object.keys(stateCounts).sort((a, b) => stateCounts[b] - stateCounts[a]);
+    const ctx = document.getElementById('stateChart').getContext('2d');
+
+    if (stateChartInstance) stateChartInstance.destroy();
+
+    stateChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: sortedStates,
+            datasets: [{
+                label: 'Active Districts',
+                data: sortedStates.map(s => stateCounts[s]),
+                backgroundColor: 'rgba(139,92,246,0.45)',
+                borderColor: '#8b5cf6',
+                borderWidth: 1.5,
+                borderRadius: 5,
+                hoverBackgroundColor: '#8b5cf6'
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(15,23,42,0.95)',
+                    titleFont: { family: 'Inter', size: 12, weight: 'bold' },
+                    bodyFont: { family: 'Inter', size: 11 },
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 1
+                }
+            },
+            scales: {
+                x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#9ca3af', font: { family: 'Inter', size: 10 } } },
+                y: { grid: { display: false }, ticks: { color: '#e5e7eb', font: { family: 'Inter', size: 10, weight: '500' } } }
+            }
+        }
+    });
+}
+</script>
+</body>
+</html>

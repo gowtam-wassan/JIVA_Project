@@ -1,0 +1,682 @@
+[
+  {
+    "State": "Andhra Pradesh",
+    "District": "Satya Sai",
+    "Matched_State": "ANDHRA PRADESH",
+    "Matched_Shapefile_District": "Prakasam",
+    "Shapefile_District": "Prakasam",
+    "Organization": "Satya Sai"
+  },
+  {
+    "State": "Andhra Pradesh",
+    "District": "Anamayya",
+    "Matched_State": "ANDHRA PRADESH",
+    "Matched_Shapefile_District": "Vizianagaram",
+    "Shapefile_District": "Vizianagaram",
+    "Organization": "Anamayya"
+  },
+  {
+    "State": "Andhra Pradesh",
+    "District": "Manyam",
+    "Matched_State": "ANDHRA PRADESH",
+    "Matched_Shapefile_District": "Vizianagaram",
+    "Shapefile_District": "Vizianagaram",
+    "Organization": "Manyam"
+  },
+  {
+    "State": "Andhra Pradesh",
+    "District": "Paderu",
+    "Matched_State": "ANDHRA PRADESH",
+    "Matched_Shapefile_District": "East Godavari",
+    "Shapefile_District": "East Godavari",
+    "Organization": "Paderu"
+  },
+  {
+    "State": "Andhra Pradesh",
+    "District": "Srikakulam",
+    "Matched_State": "ANDHRA PRADESH",
+    "Matched_Shapefile_District": "Srikakulam",
+    "Shapefile_District": "Srikakulam",
+    "Organization": "Srikakulam"
+  },
+  {
+    "State": "Andhra Pradesh",
+    "District": "Prakasam",
+    "Matched_State": "ANDHRA PRADESH",
+    "Matched_Shapefile_District": "Prakasam",
+    "Shapefile_District": "Prakasam",
+    "Organization": "Prakasam"
+  },
+  {
+    "State": "Andhra Pradesh",
+    "District": "Satya Sai",
+    "Matched_State": "ANDHRA PRADESH",
+    "Matched_Shapefile_District": "Prakasam",
+    "Shapefile_District": "Prakasam",
+    "Organization": "Satya Sai"
+  },
+  {
+    "State": "Arunachal Pradesh",
+    "District": "Namsai",
+    "Matched_State": "ARUNACHAL PRADESH",
+    "Matched_Shapefile_District": "Namsai",
+    "Shapefile_District": "Namsai",
+    "Organization": "Namsai"
+  },
+  {
+    "State": "Assam",
+    "District": "Baksa",
+    "Matched_State": "ASSAM",
+    "Matched_Shapefile_District": "Baksa",
+    "Shapefile_District": "Baksa",
+    "Organization": "Baksa"
+  },
+  {
+    "State": "Assam",
+    "District": "West Karbi Anglong",
+    "Matched_State": "ASSAM",
+    "Matched_Shapefile_District": "West Karbi Anglong",
+    "Shapefile_District": "West Karbi Anglong",
+    "Organization": "West Karbi Anglong"
+  },
+  {
+    "State": "Bihar",
+    "District": "Jamui",
+    "Matched_State": "BIHAR",
+    "Matched_Shapefile_District": "Jamui",
+    "Shapefile_District": "Jamui",
+    "Organization": "Jamui"
+  },
+  {
+    "State": "Bihar",
+    "District": "Samastipur",
+    "Matched_State": "BIHAR",
+    "Matched_Shapefile_District": "Samastipur",
+    "Shapefile_District": "Samastipur",
+    "Organization": "Samastipur"
+  },
+  {
+    "State": "Chhattisgarh",
+    "District": "Baluda Bazar",
+    "Matched_State": "CHHATTISGARH",
+    "Matched_Shapefile_District": "Baloda Bazar",
+    "Shapefile_District": "Baloda Bazar",
+    "Organization": "Baluda Bazar"
+  },
+  {
+    "State": "Chhattisgarh",
+    "District": "Dantewada",
+    "Matched_State": "CHHATTISGARH",
+    "Matched_Shapefile_District": "Dakshin Bastar Dantewada",
+    "Shapefile_District": "Dakshin Bastar Dantewada",
+    "Organization": "Dantewada"
+  },
+  {
+    "State": "Chhattisgarh",
+    "District": "Korba",
+    "Matched_State": "CHHATTISGARH",
+    "Matched_Shapefile_District": "Korba",
+    "Shapefile_District": "Korba",
+    "Organization": "Korba"
+  },
+  {
+    "State": "Chhattisgarh",
+    "District": "Balrampur",
+    "Matched_State": "CHHATTISGARH",
+    "Matched_Shapefile_District": "Balrampur",
+    "Shapefile_District": "Balrampur",
+    "Organization": "Balrampur"
+  },
+  {
+    "State": "Gujarat",
+    "District": "Navsari",
+    "Matched_State": "GUJARAT",
+    "Matched_Shapefile_District": "Navsari",
+    "Shapefile_District": "Navsari",
+    "Organization": "Navsari"
+  },
+  {
+    "State": "Gujarat",
+    "District": "Panchmahal",
+    "Matched_State": "GUJARAT",
+    "Matched_Shapefile_District": "Panch Mahals",
+    "Shapefile_District": "Panch Mahals",
+    "Organization": "Panchmahal"
+  },
+  {
+    "State": "Gujarat",
+    "District": "Mahisagar",
+    "Matched_State": "GUJARAT",
+    "Matched_Shapefile_District": "Mahisagar",
+    "Shapefile_District": "Mahisagar",
+    "Organization": "Mahisagar"
+  },
+  {
+    "State": "Gujarat",
+    "District": "Narmada",
+    "Matched_State": "GUJARAT",
+    "Matched_Shapefile_District": "Narmada",
+    "Shapefile_District": "Narmada",
+    "Organization": "Narmada"
+  },
+  {
+    "State": "Gujarat",
+    "District": "Aravalli",
+    "Matched_State": "GUJARAT",
+    "Matched_Shapefile_District": "Aravalli",
+    "Shapefile_District": "Aravalli",
+    "Organization": "Aravalli"
+  },
+  {
+    "State": "Himachal Pradesh",
+    "District": "Mandi",
+    "Matched_State": "HIMACHAL PRADESH",
+    "Matched_Shapefile_District": "Mandi",
+    "Shapefile_District": "Mandi",
+    "Organization": "Mandi"
+  },
+  {
+    "State": "Himachal Pradesh",
+    "District": "Chamba",
+    "Matched_State": "HIMACHAL PRADESH",
+    "Matched_Shapefile_District": "Chamba",
+    "Shapefile_District": "Chamba",
+    "Organization": "Chamba"
+  },
+  {
+    "State": "Jharkhand",
+    "District": "West Singhbum",
+    "Matched_State": "JHARKHAND",
+    "Matched_Shapefile_District": "Purbi Singhbhum",
+    "Shapefile_District": "Purbi Singhbhum",
+    "Organization": "West Singhbum"
+  },
+  {
+    "State": "Jharkhand",
+    "District": "Dumka",
+    "Matched_State": "JHARKHAND",
+    "Matched_Shapefile_District": "Dumka",
+    "Shapefile_District": "Dumka",
+    "Organization": "Dumka"
+  },
+  {
+    "State": "Jharkhand",
+    "District": "Ramgarh",
+    "Matched_State": "JHARKHAND",
+    "Matched_Shapefile_District": "Ramgarh",
+    "Shapefile_District": "Ramgarh",
+    "Organization": "Ramgarh"
+  },
+  {
+    "State": "Jharkhand",
+    "District": "Lohardaga",
+    "Matched_State": "JHARKHAND",
+    "Matched_Shapefile_District": "Lohardaga",
+    "Shapefile_District": "Lohardaga",
+    "Organization": "Lohardaga"
+  },
+  {
+    "State": "Jharkhand",
+    "District": "Pashchimi Singhbhum",
+    "Matched_State": "JHARKHAND",
+    "Matched_Shapefile_District": "Pashchimi Singhbhum",
+    "Shapefile_District": "Pashchimi Singhbhum",
+    "Organization": "Pashchimi Singhbhum"
+  },
+  {
+    "State": "Jharkhand",
+    "District": "Hazaribagh",
+    "Matched_State": "JHARKHAND",
+    "Matched_Shapefile_District": "Hazaribagh",
+    "Shapefile_District": "Hazaribagh",
+    "Organization": "Hazaribagh"
+  },
+  {
+    "State": "Jharkhand",
+    "District": "Palamau",
+    "Matched_State": "JHARKHAND",
+    "Matched_Shapefile_District": "Palamu",
+    "Shapefile_District": "Palamu",
+    "Organization": "Palamau"
+  },
+  {
+    "State": "Jharkhand",
+    "District": "Deoghar",
+    "Matched_State": "JHARKHAND",
+    "Matched_Shapefile_District": "Deoghar",
+    "Shapefile_District": "Deoghar",
+    "Organization": "Deoghar"
+  },
+  {
+    "State": "Jharkhand",
+    "District": "Deoghar",
+    "Matched_State": "JHARKHAND",
+    "Matched_Shapefile_District": "Deoghar",
+    "Shapefile_District": "Deoghar",
+    "Organization": "Deoghar"
+  },
+  {
+    "State": "Jharkhand",
+    "District": "Latehar",
+    "Matched_State": "JHARKHAND",
+    "Matched_Shapefile_District": "Latehar",
+    "Shapefile_District": "Latehar",
+    "Organization": "Latehar"
+  },
+  {
+    "State": "Karnataka",
+    "District": "Chitradurga",
+    "Matched_State": "KARNATAKA",
+    "Matched_Shapefile_District": "Chitradurga",
+    "Shapefile_District": "Chitradurga",
+    "Organization": "Chitradurga"
+  },
+  {
+    "State": "Karnataka",
+    "District": "Chikkamagaluru",
+    "Matched_State": "KARNATAKA",
+    "Matched_Shapefile_District": "Chikkamagaluru",
+    "Shapefile_District": "Chikkamagaluru",
+    "Organization": "Chikkamagaluru"
+  },
+  {
+    "State": "Karnataka",
+    "District": "Chikkaballapura",
+    "Matched_State": "KARNATAKA",
+    "Matched_Shapefile_District": "Chikkaballapura",
+    "Shapefile_District": "Chikkaballapura",
+    "Organization": "Chikkaballapura"
+  },
+  {
+    "State": "Karnataka",
+    "District": "Chitradurga",
+    "Matched_State": "KARNATAKA",
+    "Matched_Shapefile_District": "Chitradurga",
+    "Shapefile_District": "Chitradurga",
+    "Organization": "Chitradurga"
+  },
+  {
+    "State": "Madhya Pradesh",
+    "District": "Dewas",
+    "Matched_State": "MADHYA PRADESH",
+    "Matched_Shapefile_District": "Dewas",
+    "Shapefile_District": "Dewas",
+    "Organization": "Dewas"
+  },
+  {
+    "State": "Madhya Pradesh",
+    "District": "Betul",
+    "Matched_State": "MADHYA PRADESH",
+    "Matched_Shapefile_District": "Betul",
+    "Shapefile_District": "Betul",
+    "Organization": "Betul"
+  },
+  {
+    "State": "Madhya Pradesh",
+    "District": "Dewas",
+    "Matched_State": "MADHYA PRADESH",
+    "Matched_Shapefile_District": "Dewas",
+    "Shapefile_District": "Dewas",
+    "Organization": "Dewas"
+  },
+  {
+    "State": "Madhya Pradesh",
+    "District": "Barwani",
+    "Matched_State": "MADHYA PRADESH",
+    "Matched_Shapefile_District": "Barwani",
+    "Shapefile_District": "Barwani",
+    "Organization": "Barwani"
+  },
+  {
+    "State": "Madhya Pradesh",
+    "District": "Chhatarpur",
+    "Matched_State": "MADHYA PRADESH",
+    "Matched_Shapefile_District": "Chhatarpur",
+    "Shapefile_District": "Chhatarpur",
+    "Organization": "Chhatarpur"
+  },
+  {
+    "State": "Madhya Pradesh",
+    "District": "Panna",
+    "Matched_State": "MADHYA PRADESH",
+    "Matched_Shapefile_District": "Panna",
+    "Shapefile_District": "Panna",
+    "Organization": "Panna"
+  },
+  {
+    "State": "Madhya Pradesh",
+    "District": "Niwari",
+    "Matched_State": "MADHYA PRADESH",
+    "Matched_Shapefile_District": "Niwari",
+    "Shapefile_District": "Niwari",
+    "Organization": "Niwari"
+  },
+  {
+    "State": "Madhya Pradesh",
+    "District": "Damoh",
+    "Matched_State": "MADHYA PRADESH",
+    "Matched_Shapefile_District": "Damoh",
+    "Shapefile_District": "Damoh",
+    "Organization": "Damoh"
+  },
+  {
+    "State": "Maharashtra",
+    "District": "Wardha",
+    "Matched_State": "MAHARASHTRA",
+    "Matched_Shapefile_District": "Wardha",
+    "Shapefile_District": "Wardha",
+    "Organization": "Wardha"
+  },
+  {
+    "State": "Maharashtra",
+    "District": "Nanded",
+    "Matched_State": "MAHARASHTRA",
+    "Matched_Shapefile_District": "Nanded",
+    "Shapefile_District": "Nanded",
+    "Organization": "Nanded"
+  },
+  {
+    "State": "Maharashtra",
+    "District": "Beed District",
+    "Matched_State": "MAHARASHTRA",
+    "Matched_Shapefile_District": "Bid",
+    "Shapefile_District": "Bid",
+    "Organization": "Beed District"
+  },
+  {
+    "State": "Maharashtra",
+    "District": "Nashik",
+    "Matched_State": "MAHARASHTRA",
+    "Matched_Shapefile_District": "Nashik",
+    "Shapefile_District": "Nashik",
+    "Organization": "Nashik"
+  },
+  {
+    "State": "Meghalaya",
+    "District": "Eastern West Khasi Hills",
+    "Matched_State": "MEGHALAYA",
+    "Matched_Shapefile_District": "South West Khasi Hills",
+    "Shapefile_District": "South West Khasi Hills",
+    "Organization": "Eastern West Khasi Hills"
+  },
+  {
+    "State": "Meghalaya",
+    "District": "West Khasi Hills",
+    "Matched_State": "MEGHALAYA",
+    "Matched_Shapefile_District": "West Khasi Hills",
+    "Shapefile_District": "West Khasi Hills",
+    "Organization": "West Khasi Hills"
+  },
+  {
+    "State": "Mizoram",
+    "District": "Serchhip",
+    "Matched_State": "MIZORAM",
+    "Matched_Shapefile_District": "Serchhip",
+    "Shapefile_District": "Serchhip",
+    "Organization": "Serchhip"
+  },
+  {
+    "State": "Mizoram",
+    "District": "Lunglei",
+    "Matched_State": "MIZORAM",
+    "Matched_Shapefile_District": "Lunglei",
+    "Shapefile_District": "Lunglei",
+    "Organization": "Lunglei"
+  },
+  {
+    "State": "Nagaland",
+    "District": "Tuensang",
+    "Matched_State": "NAGALAND",
+    "Matched_Shapefile_District": "Tuensang",
+    "Shapefile_District": "Tuensang",
+    "Organization": "Tuensang"
+  },
+  {
+    "State": "Nagaland",
+    "District": "Kiphire",
+    "Matched_State": "NAGALAND",
+    "Matched_Shapefile_District": "Kiphire",
+    "Shapefile_District": "Kiphire",
+    "Organization": "Kiphire"
+  },
+  {
+    "State": "Odisha",
+    "District": "Malkangiri",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Malkangiri",
+    "Shapefile_District": "Malkangiri",
+    "Organization": "Malkangiri"
+  },
+  {
+    "State": "Odisha",
+    "District": "Koraput",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Koraput",
+    "Shapefile_District": "Koraput",
+    "Organization": "Koraput"
+  },
+  {
+    "State": "Odisha",
+    "District": "Mayurbanj",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Mayurbhanj",
+    "Shapefile_District": "Mayurbhanj",
+    "Organization": "Mayurbanj"
+  },
+  {
+    "State": "Odisha",
+    "District": "Sundergarh",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Sundargarh",
+    "Shapefile_District": "Sundargarh",
+    "Organization": "Sundergarh"
+  },
+  {
+    "State": "Odisha",
+    "District": "Koraput",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Koraput",
+    "Shapefile_District": "Koraput",
+    "Organization": "Koraput"
+  },
+  {
+    "State": "Odisha",
+    "District": "Sundargarh",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Sundargarh",
+    "Shapefile_District": "Sundargarh",
+    "Organization": "Sundargarh"
+  },
+  {
+    "State": "Odisha",
+    "District": "Bolangir",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Balangir",
+    "Shapefile_District": "Balangir",
+    "Organization": "Bolangir"
+  },
+  {
+    "State": "Odisha",
+    "District": "Mayurbhanj",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Mayurbhanj",
+    "Shapefile_District": "Mayurbhanj",
+    "Organization": "Mayurbhanj"
+  },
+  {
+    "State": "Odisha",
+    "District": "Dhenkanal",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Dhenkanal",
+    "Shapefile_District": "Dhenkanal",
+    "Organization": "Dhenkanal"
+  },
+  {
+    "State": "Odisha",
+    "District": "Kandhamal",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Kandhamal",
+    "Shapefile_District": "Kandhamal",
+    "Organization": "Kandhamal"
+  },
+  {
+    "State": "Odisha",
+    "District": "Koraput",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Koraput",
+    "Shapefile_District": "Koraput",
+    "Organization": "Koraput"
+  },
+  {
+    "State": "Odisha",
+    "District": "Gajapati",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Gajapati",
+    "Shapefile_District": "Gajapati",
+    "Organization": "Gajapati"
+  },
+  {
+    "State": "Odisha",
+    "District": "Nayagarh",
+    "Matched_State": "ODISHA",
+    "Matched_Shapefile_District": "Nayagarh",
+    "Shapefile_District": "Nayagarh",
+    "Organization": "Nayagarh"
+  },
+  {
+    "State": "Rajasthan",
+    "District": "Sikar",
+    "Matched_State": "RAJASTHAN",
+    "Matched_Shapefile_District": "Sikar",
+    "Shapefile_District": "Sikar",
+    "Organization": "Sikar"
+  },
+  {
+    "State": "Tamil Nadu",
+    "District": "Namakkal",
+    "Matched_State": "TAMIL NADU",
+    "Matched_Shapefile_District": "Namakkal",
+    "Shapefile_District": "Namakkal",
+    "Organization": "Namakkal"
+  },
+  {
+    "State": "Telangana",
+    "District": "Bhadradri Kothagudem",
+    "Matched_State": "TELANGANA",
+    "Matched_Shapefile_District": "Bhadradri Kothagudem",
+    "Shapefile_District": "Bhadradri Kothagudem",
+    "Organization": "Bhadradri Kothagudem"
+  },
+  {
+    "State": "Telangana",
+    "District": "Asifabad",
+    "Matched_State": "TELANGANA",
+    "Matched_Shapefile_District": "Adilabad",
+    "Shapefile_District": "Adilabad",
+    "Organization": "Asifabad"
+  },
+  {
+    "State": "Telangana",
+    "District": "Vikarabad",
+    "Matched_State": "TELANGANA",
+    "Matched_Shapefile_District": "Vikarabad",
+    "Shapefile_District": "Vikarabad",
+    "Organization": "Vikarabad"
+  },
+  {
+    "State": "Telangana",
+    "District": "Nagarkurnool",
+    "Matched_State": "TELANGANA",
+    "Matched_Shapefile_District": "Nagarkurnool",
+    "Shapefile_District": "Nagarkurnool",
+    "Organization": "Nagarkurnool"
+  },
+  {
+    "State": "Telangana",
+    "District": "Medak",
+    "Matched_State": "TELANGANA",
+    "Matched_Shapefile_District": "Medak",
+    "Shapefile_District": "Medak",
+    "Organization": "Medak"
+  },
+  {
+    "State": "Telangana",
+    "District": "Narayanpet",
+    "Matched_State": "TELANGANA",
+    "Matched_Shapefile_District": "Narayanpet",
+    "Shapefile_District": "Narayanpet",
+    "Organization": "Narayanpet"
+  },
+  {
+    "State": "Telangana",
+    "District": "Medchal-Malkajgiri",
+    "Matched_State": "TELANGANA",
+    "Matched_Shapefile_District": "Medchal Malkajgiri",
+    "Shapefile_District": "Medchal Malkajgiri",
+    "Organization": "Medchal-Malkajgiri"
+  },
+  {
+    "State": "Telangana",
+    "District": "Khammam",
+    "Matched_State": "TELANGANA",
+    "Matched_Shapefile_District": "Khammam",
+    "Shapefile_District": "Khammam",
+    "Organization": "Khammam"
+  },
+  {
+    "State": "Uttar Pradesh",
+    "District": "Chitrakoot",
+    "Matched_State": "UTTAR PRADESH",
+    "Matched_Shapefile_District": "Chitrakoot",
+    "Shapefile_District": "Chitrakoot",
+    "Organization": "Chitrakoot"
+  },
+  {
+    "State": "Uttar Pradesh",
+    "District": "Banda",
+    "Matched_State": "UTTAR PRADESH",
+    "Matched_Shapefile_District": "Banda",
+    "Shapefile_District": "Banda",
+    "Organization": "Banda"
+  },
+  {
+    "State": "Uttar Pradesh",
+    "District": "Mahoba",
+    "Matched_State": "UTTAR PRADESH",
+    "Matched_Shapefile_District": "Mahoba",
+    "Shapefile_District": "Mahoba",
+    "Organization": "Mahoba"
+  },
+  {
+    "State": "West Bengal",
+    "District": "Kalimpong",
+    "Matched_State": "WEST BENGAL",
+    "Matched_Shapefile_District": "Kalimpong",
+    "Shapefile_District": "Kalimpong",
+    "Organization": "Kalimpong"
+  },
+  {
+    "State": "West Bengal",
+    "District": "Bankura",
+    "Matched_State": "WEST BENGAL",
+    "Matched_Shapefile_District": "Bankura",
+    "Shapefile_District": "Bankura",
+    "Organization": "Bankura"
+  },
+  {
+    "State": "West Bengal",
+    "District": "Purulia",
+    "Matched_State": "WEST BENGAL",
+    "Matched_Shapefile_District": "Puruliya",
+    "Shapefile_District": "Puruliya",
+    "Organization": "Purulia"
+  },
+  {
+    "State": "West Bengal",
+    "District": "South 24 Parganas",
+    "Matched_State": "WEST BENGAL",
+    "Matched_Shapefile_District": "South Twenty Four Pargan*",
+    "Shapefile_District": "South Twenty Four Pargan*",
+    "Organization": "South 24 Parganas"
+  }
+]
